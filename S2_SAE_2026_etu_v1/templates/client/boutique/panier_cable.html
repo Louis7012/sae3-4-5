@@ -1,0 +1,95 @@
+{#  cables_panier  : tableau de dictionnaires
+        * dictionnaire : nom quantite prix cable_id [stock]
+        *
+#}
+
+{% extends "client/layout_client.html" %}
+{% block body %}
+    <div class="container">
+        <div class="row align-self-right">
+        {% include('client/boutique/_panier.html') %}
+            <div class="col">
+              <h3>Les filtres</h3>
+              Cables dont le nom est composé par :<br>
+                 {% include('client/boutique/_filtre.html') %}
+            </div>
+        </div>
+
+        <div class="bg-light p-3">
+            <h1>Les cables</h1>
+        </div>
+
+        <div class="row">
+                {% for cable in cable  %}
+                        <div class="card col-4 mt-4 p-1">
+                            <div class="card-body border-dark rounded p-1">
+                                <a href="/client/cable/details?id_cable={{ cable.id_cable }}" >
+                                <h3 class="card-title">
+                                    <span style="color: #0b2e13">{{ cable.nom }}</span><br>
+                                    {{ cable.prix }}
+                                    €
+                                </h3>
+                                     {%  if cable.image is not none %}
+                                        <img class="card-img-top rounded mx-auto d-block"  style="width:100px;height:100px"  src="{{ url_for('static', filename = 'images/')}}{{ cable.image }}"  alt="image  de {{ cable.nom }}" >
+                                    {% else %} <img class="card-img-top rounded mx-auto d-block"   style="width:100px;height:100px"   src="{{ url_for('static', filename='images/no_photo.jpeg')}}"  alt="image  de {{ cable.nom }}" >
+                                    {% endif %}
+                                    <hr>
+                                </a>
+                                <div class="row">
+{# #}                                {% if  cable.stock is defined and cable.stock != None %}
+{# #}                                    {% if cable.stock > 0 %}
+                                        <form  action="/client/panier/add"  method="post" class="col-5">
+                                            <input type="hidden" name="id_cable" value="{{ cable.id_cable }}">
+                                            <div class="input-group">
+                                            <button class="btn  btn-success"  id="button-addon1">
+                                                <i class="fas fa-shopping-cart">Ajouter</i>
+                                            </button>
+                                            <input type="number" id="input-{{ cable.id_cable }}" step="1" min="0" max="{{ cable.stock }}" class="form-control" value="1" name="quantite"  aria-describedby="button-addon1">
+                                            </div>
+                                        </form>
+{# #}                                    {% endif %}
+{# #}                                {% endif %}
+                                     <div class="col-2 align-content-end">
+                                    {% if cable.liste_envie is defined %}
+                                         {%if  cable.liste_envie== 1%}
+                                             <a href="/client/envie/add?id_cable={{ cable.id_cable }}" style="text-decoration: none">💛</a>
+                                         {% else %}
+                                             <a href="/client/envie/add?id_cable={{ cable.id_cable }}" style="text-decoration: none">🤍</a>
+                                         {% endif %}
+                                    {% endif %}
+                                     </div>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                            {% if cable.stock is defined and cable.stock != None %}
+                                 {% if cable.stock > 0 %}
+                                    <small class="text-muted">Stock restant : {{ cable.stock }}</small>
+                                 {% else %}
+                                    <small class="text-muted">cable  momentanément indisponible</small>
+                                 {% endif %}
+                                {% if cable.nb_declinaison is defined and cable.nb_declinaison != None %}
+                                    ({{ cable.nb_declinaison }} d.)
+                                {% endif %}
+                                <br>
+                            {% endif %}
+                            {% if cable.nb_notes is defined %}
+                                {% if cable.nb_notes > 0 %}
+                                 <a  href="/client/cable/details?id_cable={{ cable.id_cable }}" >
+                                    <span style="color: #3A7734"> note : {{  "{:,.1f}".format(cable.moy_notes) }}({{ cable.nb_notes }})</span>
+                                 </a>
+                                {% endif %}
+                            {% endif %}
+                            {% if cable.nb_avis is defined %}
+                                {% if cable.nb_avis > 0 %}
+                                 <a href="/client/cable/details?id_cable={{ cable.id_cable }}" >
+                                    <span style="color: #3A7734">({{ cable.nb_avis }} avis)</span>
+                                 </a>
+                                {% endif %}
+                            {% endif %}
+                            </div>
+                        </div>
+                {% endfor %}
+        </div>
+    </div>
+{#    {{ cables | pprint }}#}
+{% endblock %}
