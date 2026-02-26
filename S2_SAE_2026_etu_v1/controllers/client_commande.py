@@ -84,4 +84,3 @@ def client_commande_show():
                            , cables_commande=cables_commande
                            , commande_adresses=commande_adresses
                            )
-
