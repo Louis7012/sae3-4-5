@@ -86,7 +86,11 @@ def client_commande_show():
     id_commande = request.args.get('id_commande', None)
     if id_commande != None:
         print(id_commande)
-        sql = ''' selection du détails d'une commande '''
+        sql = ''' SELECT cable.nom_cable, 
+        SUM(lc.quantite_commande) as quantite_commande,
+          lc.prix,
+          SUM(lc.prix * lc.quantite_commande) AS prix_total
+          FROM ligne_commande lc '''
 
         # partie 2 : selection de l'adresse de livraison et de facturation de la commande selectionnée
         sql = ''' selection des adressses '''

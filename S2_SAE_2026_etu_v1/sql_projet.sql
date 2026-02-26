@@ -89,11 +89,10 @@ CREATE TABLE ligne_panier(
 -- =========================
 
 INSERT INTO type_prise (nom_type_prise) VALUES
-('USB-A vers USB-C'),
-('USB-C vers USB-C'),
-('Lightning'),
-('Micro-USB'),
-('Jack 3.5mm');
+('HDMI'),
+('Jack'),
+('RJ45'),
+('USB-C');
 
 INSERT INTO longueur (nom_longueur) VALUES
 ('0.5 m'),
