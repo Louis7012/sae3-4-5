@@ -41,11 +41,10 @@ def client_commande_add():
     id_client = session['id_user']
     sql = ''' selection du contenu du panier de l'utilisateur '''
     items_ligne_panier = []
-    # if items_ligne_panier is None or len(items_ligne_panier) < 1:
-    #     flash(u'Pas d\'cables dans le ligne_panier', 'alert-warning')
-    #     return redirect('/client/cable/show')
-                                           # https://pynative.com/python-mysql-transaction-management-using-commit-rollback/
-    #a = datetime.strptime('my date', "%b %d %Y %H:%M")
+    if items_ligne_panier is None or len(items_ligne_panier) < 1:
+        flash(u'Pas d\'cables dans le ligne_panier', 'alert-warning')
+        return redirect('/client/cable/show')
+    a = datetime.strptime('my date', "%b %d %Y %H:%M")
 
     sql = ''' creation de la commande '''
 
@@ -66,8 +65,21 @@ def client_commande_add():
 def client_commande_show():
     mycursor = get_db().cursor()
     id_client = session['id_user']
-    sql = '''  selection des commandes ordonnées par état puis par date d'achat descendant '''
-    commandes = []
+    sql = '''  SELECT c.id_commande,
+     c.date_achat,
+     c.etat_id,
+     e.libelle,
+     SUM(lc.quantite_commande) AS nbr_cables,
+     SUM(lc.prix * lc.quantite_commande) AS prix_total
+     FROM commande c
+     LEFT JOIN ligne_commande lc ON lc.commande_id = c.id_commande
+        JOIN etat e ON c.etat_id = e.id_etat
+        WHERE c.utilisateur_id = %s
+        GROUP BY c.id_commande, c.date_achat, c.etat_id, e.libelle
+        ORDER BY c.etat_id ASC, c.date_achat DESC;
+     '''
+    mycursor.execute(sql, (id_client, ))
+    commandes = mycursor.fetchall()
 
     cables_commande = None
     commande_adresses = None
@@ -80,7 +92,7 @@ def client_commande_show():
         sql = ''' selection des adressses '''
 
     return render_template('client/commandes/show.html'
-                           , commandes=commandes
+                           , commande=commandes
                            , cables_commande=cables_commande
                            , commande_adresses=commande_adresses
                            )

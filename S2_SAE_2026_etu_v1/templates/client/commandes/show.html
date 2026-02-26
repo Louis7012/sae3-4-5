@@ -15,7 +15,7 @@
                                     <span style="color:rgba(255,197,197,0.6);"> ( {{ ligne.nb_declinaisons }} declinaisons )</span>
                                     <span style="color:#6dcea2">
                                     {% if ligne.couleur_id != 1 %}
-                                        {{ ligne.libelle_couleur }} 
+                                        {{ ligne.libelle_couleur }}
                                     {% endif %}
                                     </span>
                                     <span  style="color:#d941c2">
@@ -63,7 +63,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        {% for commande in commandes %}
+                        {% for commande in commande %}
                             <tr id="" {% if commande.etat_id == 1 %} style="background: #FFD600; font-weight: bold;" {% endif %}>
                                 <td>{{ commande.date_achat.strftime('%d-%m-%Y') }}</td>
                                 <td> {{ commande.nbr_cables }} </td>
