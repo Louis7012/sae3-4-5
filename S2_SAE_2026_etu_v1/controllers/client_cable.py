@@ -34,7 +34,10 @@ def client_cable_show():                                 # remplace client_index
 
 
     # pour le filtre
-    type_prise = []
+    type_prise = '''SELECT DISTINCT nom_type_prise as nom
+    FROM type_prise;'''
+    mycursor.execute(type_prise)
+    type_prise = mycursor.fetchall()
 
 
     cables_panier = []

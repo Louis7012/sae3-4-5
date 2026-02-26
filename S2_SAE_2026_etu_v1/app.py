@@ -25,6 +25,29 @@ from controllers.client_liste_envies import *
 app = Flask(__name__)
 app.secret_key = 'une cle(token) : grain de sel(any random string)'
 
+from flask import session, g
+import pymysql.cursors
+
+import os                                 # à ajouter
+from dotenv import load_dotenv            # à ajouter
+load_dotenv()                             # à ajouter
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        #
+        db = g._database = pymysql.connect(
+            host="localhost",
+            user="rpeig",
+            password="secret",
+            database="s2_BDD",
+            charset='utf8mb4',
+            cursorclass=pymysql.cursors.DictCursor
+        )
+        # à activer sur les machines personnelles :
+        activate_db_options(db)
+    return db
+
 @app.teardown_appcontext
 def teardown_db(exception):
     db = g.pop('db', None)
