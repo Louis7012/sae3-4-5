@@ -34,22 +34,40 @@ def client_cable_show():                                 # remplace client_index
 
 
     # pour le filtre
-    type_prise = '''SELECT DISTINCT nom_type_prise as nom
-    FROM type_prise;'''
-    mycursor.execute(type_prise)
-    type_prise = mycursor.fetchall()
+    type_prise = []
 
+    sql = '''
+        SELECT ligne_panier.utilisateur_id,
+               ligne_panier.cable_id        AS id_cable,
+               ligne_panier.quantite_panier AS quantite,
+               ligne_panier.date_ajout,
+               cable.prix_cable             AS prix,
+               cable.nom_cable              AS nom
+        FROM ligne_panier
+        JOIN cable
+            ON ligne_panier.cable_id = cable.id_cable
+        WHERE ligne_panier.utilisateur_id = %s;
+    '''
 
-    cables_panier = []
+    mycursor.execute(sql, (id_client,))
+    cables_panier = mycursor.fetchall()
 
     if len(cables_panier) >= 1:
-        sql = ''' calcul du prix total du panier '''
-        prix_total = None
+        sql = '''
+            SELECT SUM(ligne_panier.quantite_panier * cable.prix_cable) AS prix_total
+            FROM ligne_panier
+            JOIN cable
+                ON ligne_panier.cable_id = cable.id_cable
+            WHERE ligne_panier.utilisateur_id = %s;
+        '''
+        mycursor.execute(sql, (id_client,))
+        prix_total = mycursor.fetchone()['prix_total']
     else:
-        prix_total = None
-    return render_template('client/boutique/panier_cable.html'
-                           , cable=cable
-                           , cables_panier=cables_panier
-                           #, prix_total=prix_total
-                           , items_filtre=type_prise
+        prix_total = 0
+
+    return render_template('client/boutique/panier_cable.html',
+                           cable=cable,
+                           cable_panier=cables_panier,  # <== ici
+                           prix_total=prix_total,
+                           items_filtre=type_prise
                            )

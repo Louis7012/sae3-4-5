@@ -63,6 +63,21 @@ def show_accueil():
             return redirect('/client/cable/show')
     return render_template('auth/layout.html')
 
+########################
+# P4 - Guilian LEVEQUE #
+########################
+
+@app.route('/admin/cable/show')
+def show_admin_cable():
+    mycursor = get_db().cursor()
+    # On récupère les données des câbles
+    sql = "SELECT id_cable, id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable;"
+    mycursor.execute(sql)
+    liste_cables = mycursor.fetchall()
+
+    # C'est ici qu'on fait le lien avec ton fichier .html
+    return render_template('admin/cable/show_cable.html', cables=liste_cables)
+
 ##################
 # Authentification
 ##################

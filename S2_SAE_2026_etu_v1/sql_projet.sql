@@ -186,3 +186,7 @@ INSERT INTO ligne_panier (cable_id, utilisateur_id, quantite_panier, date_ajout)
 (5, 1, 2, '2026-01-28'),
 (1, 2, 1, '2026-01-27'),
 (3, 2, 1, '2026-01-29');
+
+
+
+

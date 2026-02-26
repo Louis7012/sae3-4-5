@@ -12,27 +12,30 @@ client_panier = Blueprint('client_panier', __name__,
 @client_panier.route('/client/panier/add', methods=['POST'])
 def client_panier_add():
     mycursor = get_db().cursor()
-    id_client = session['id_user']                                          # modifier de là
+    id_client = session['id_user']
     id_cable = request.form.get('id_cable')
     quantite = request.form.get('quantite')
-    sql = "SELECT * FROM ligne_panier WHERE stylo_id = %s AND utilisateur_id = %s "
-    mycursor.execute(sql, (id_client, id_cable))
+
+
+    sql = "SELECT * FROM ligne_panier WHERE cable_id = %s AND utilisateur_id = %s"
+    mycursor.execute(sql, (id_cable, id_client))
     cable_panier = mycursor.fetchone()
 
-    mycursor.execute("SELECT * FROM stylo WHERE id_stylo = %s", (id_cable,))
-    cable = mycursor.fetchone()
-
-    if not(cable_panier is None) and cable_panier['quantite'] >= 1:
+    if cable_panier is not None and cable_panier['quantite_panier'] >= 1:
         tuple_update = (quantite, id_client, id_cable)
         sql = "UPDATE ligne_panier SET quantite_panier = quantite_panier+%s WHERE utilisateur_id = %s AND cable_id = %s"
         mycursor.execute(sql, tuple_update)
     else:
         tuple_insert = (id_client, id_cable, quantite)
-        sql = "INSERT INTO ligne_panier(utilisateur_id, stylo_id, quantite, date_ajout) VALUES (%s, %s, %s, current_timestamp)"
+        sql = """INSERT INTO ligne_panier(utilisateur_id, cable_id, quantite_panier, date_ajout)
+                 VALUES (%s, %s, %s, current_timestamp)"""
         mycursor.execute(sql, tuple_insert)
 
+    sql="UPDATE cable SET stock=stock-%s WHERE id_cable=%s"
+    mycursor.execute(sql, (quantite, id_cable))
+
     get_db().commit()
-    return redirect('/client/cable/show')                                 # à là
+    return redirect('/client/cable/show')
 
     #id_declinaison_cable=request.form.get('id_declinaison_cable',None)
     id_declinaison_cable = 1
@@ -131,3 +134,36 @@ def client_panier_filtre_suppr():
     # suppression  des variables en session
     print("suppr filtre")
     return redirect('/client/cable/show')
+
+
+
+
+
+@client_panier.route('/client/panier/show')
+def client_panier_show():
+    mycursor = get_db().cursor()
+    id_client = session['id_user']
+
+    sql = """
+        SELECT lp.cable_id,
+               lp.quantite_panier AS quantite,
+               c.nom_cable AS nom,
+               c.prix_cable AS prix,
+               c.stock
+        FROM ligne_panier lp
+        JOIN cable c ON lp.cable_id = c.id_cable
+        WHERE lp.utilisateur_id = %s
+    """
+
+    mycursor.execute(sql, (id_client,))
+    cable_panier = mycursor.fetchall()
+
+    prix_total = 0
+    for item in cable_panier:
+        prix_total += item['prix'] * item['quantite']
+
+    return render_template(
+        'client/panier.html',
+        cable_panier=cable_panier,
+        prix_total=prix_total
+    )
