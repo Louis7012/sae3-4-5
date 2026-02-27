@@ -1,1 +1,3 @@
 .idea
+connexion_db.py
+flask_run.sh
