@@ -23,16 +23,14 @@
                             <td>{{item_panier.prix}}</td>
                             <td>{{ "{:,.2f} €".format((item_panier.prix * item_panier.quantite)) }}{#{(panier.cable.prix * panier.quantite)|number_format(2) }#}</td>
                             <td>
-{# #}                            {% if item_panier.stock is defined %}
-{# #}                               {% if item_panier.stock > 0 %}
+
                                 <form action="/client/panier/add"  style="display: inline-block;"  method="post">
 {# #}                                   <input type="hidden" name="id_declinaison_cable" value="{{ item_panier.id_declinaison_cable }}">
                                         <input type="hidden" name="quantite" value="1">
                                         <input type="hidden" name="id_cable" value="{{ item_panier.id_cable }}">
                                     <button class="btn btn-primary" > + </button>
                                 </form>
-{# #}                               {% endif %}
-{# #}                           {% endif %}
+
                                 <form action="/client/panier/delete"   style="display: inline-block;"  method="post">
 {# #}                               <input type="hidden" name="id_declinaison_cable" value="{{ item_panier.id_declinaison_cable }}">
                                     <input type="hidden" name="id_cable" value="{{ item_panier.id_cable }}">
