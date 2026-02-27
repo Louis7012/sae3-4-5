@@ -6,7 +6,7 @@ from flask import request, render_template, redirect, abort, flash, session
 from connexion_db import get_db
 
 client_panier = Blueprint('client_panier', __name__,
-                        template_folder='templates')
+                          template_folder='templates')
 
 
 @client_panier.route('/client/panier/add', methods=['POST'])
@@ -40,7 +40,7 @@ def client_panier_add():
     #id_declinaison_cable=request.form.get('id_declinaison_cable',None)
     id_declinaison_cable = 1
 
-# ajout dans le panier d'une déclinaison d'un cable (si 1 declinaison : immédiat sinon => vu pour faire un choix
+    # ajout dans le panier d'une déclinaison d'un cable (si 1 declinaison : immédiat sinon => vu pour faire un choix
     # sql = '''    '''
     # mycursor.execute(sql, (id_cable))
     # declinaisons = mycursor.fetchall()
@@ -57,7 +57,7 @@ def client_panier_add():
     #                                , quantite=quantite
     #                                , cable=cable)
 
-# ajout dans le panier d'un cable
+    # ajout dans le panier d'un cable
 
 
     return redirect('/client/cable/show')
@@ -73,13 +73,21 @@ def client_panier_delete():
     # partie 2 : on supprime une déclinaison de l'cable
     # id_declinaison_cable = request.form.get('id_declinaison_cable', None)
 
-    sql = ''' selection de la ligne du panier pour l'article et l'utilisateur connecté'''
-    cable_panier=[]
+    sql = ''' SELECT quantite_panier
+        FROM ligne_panier
+        WHERE utilisateur_id = %s AND cable_id = %s'''
+    mycursor.execute(sql, (id_client, id_cable))
+    cable_panier = mycursor.fetchone()
 
     if not(cable_panier is None) and cable_panier['quantite'] > 1:
-        sql = ''' mise à jour de la quantité dans le panier => -1 cable '''
+        sql = ''' UPDATE ligne_panier
+                SET quantite_panier = quantite_panier - 1
+                WHERE utilisateur_id = %s AND cable_id = %s '''
+        mycursor.execute(sql, (id_client, id_cable))
     else:
-        sql = ''' suppression de la ligne de panier'''
+        sql = ''' DELETE FROM ligne_panier
+                WHERE utilisateur_id = %s AND cable_id = %s'''
+        mycursor.execute(sql, (id_client, id_cable))
 
     # mise à jour du stock de l'article disponible
     get_db().commit()
@@ -93,12 +101,23 @@ def client_panier_delete():
 def client_panier_vider():
     mycursor = get_db().cursor()
     client_id = session['id_user']
-    sql = ''' sélection des lignes de panier'''
+    quantite = request.form.get('quantite')
+    id_cable = request.form.get('id_cable')
+    sql = ''' SELECT cable_id, quantite_panier
+        FROM ligne_panier
+        WHERE utilisateur_id = %s
+        '''
+    mycursor.execute(sql, (client_id,))
     items_panier = []
     for item in items_panier:
-        sql = ''' suppression de la ligne de panier de l'article pour l'utilisateur connecté'''
+        sql = ''' DELETE FROM ligne_panier
+        WHERE utilisateur_id = %s'''
+        mycursor.execute(sql, (client_id,))
 
-        sql2=''' mise à jour du stock de l'article : stock = stock + qté de la ligne pour l'article'''
+        sql2=''' UPDATE cable
+            SET stock = stock + %s
+            WHERE id_cable = %s'''
+        mycursor.execute(sql2, (quantite, id_cable))
         get_db().commit()
     return redirect('/client/cable/show')
 
@@ -108,12 +127,25 @@ def client_panier_delete_line():
     mycursor = get_db().cursor()
     id_client = session['id_user']
     #id_declinaison_cable = request.form.get('id_declinaison_cable')
+    id_cable = request.form.get('id_cable')
+    quantite = request.form.get('quantite')
 
-    sql = ''' selection de ligne du panier '''
 
-    sql = ''' suppression de la ligne du panier '''
-    sql2=''' mise à jour du stock de l'article : stock = stock + qté de la ligne pour l'article'''
+    sql = '''SELECT *
+    FROM ligne_panier
+    WHERE cable_id = %s AND utilisateur_id = %s;'''
+    mycursor.execute(sql, (id_cable, id_client))
 
+
+    sql = '''DELETE FROM ligne_panier
+            WHERE utilisateur_id = %s AND cable_id = %s'''
+
+    mycursor.execute(sql, (id_client, id_cable))
+
+    sql2='''UPDATE cable
+            SET stock = stock + %s
+            WHERE id_cable = %s'''
+    mycursor.execute(sql, (quantite, id_cable))
     get_db().commit()
     return redirect('/client/cable/show')
 
@@ -134,36 +166,3 @@ def client_panier_filtre_suppr():
     # suppression  des variables en session
     print("suppr filtre")
     return redirect('/client/cable/show')
-
-
-
-
-
-@client_panier.route('/client/panier/show')
-def client_panier_show():
-    mycursor = get_db().cursor()
-    id_client = session['id_user']
-
-    sql = """
-        SELECT lp.cable_id,
-               lp.quantite_panier AS quantite,
-               c.nom_cable AS nom,
-               c.prix_cable AS prix,
-               c.stock
-        FROM ligne_panier lp
-        JOIN cable c ON lp.cable_id = c.id_cable
-        WHERE lp.utilisateur_id = %s
-    """
-
-    mycursor.execute(sql, (id_client,))
-    cable_panier = mycursor.fetchall()
-
-    prix_total = 0
-    for item in cable_panier:
-        prix_total += item['prix'] * item['quantite']
-
-    return render_template(
-        'client/panier.html',
-        cable_panier=cable_panier,
-        prix_total=prix_total
-    )
