@@ -1,3 +1,5 @@
 .idea
 connexion_db.py
 flask_run.sh
+__pycache__/*
+controllers/__pycache__/*
