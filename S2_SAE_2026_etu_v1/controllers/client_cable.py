@@ -18,6 +18,7 @@ def client_cable_show():                                 # remplace client_index
     list_param = []
     condition_and = ""
     # utilisation du filtre
+    # affichage des produits
     sql3=''' prise en compte des commentaires et des notes dans le SQL    '''
     sql = '''
           SELECT id_cable   AS id_cable
@@ -34,7 +35,11 @@ def client_cable_show():                                 # remplace client_index
 
 
     # pour le filtre
-    type_prise = []
+    type_prise = """SELECT type_prise.id_type_prise, type_prise.nom_type_prise as nom
+                    FROM type_prise
+                    """
+    mycursor.execute(type_prise)
+    type_prise = mycursor.fetchall()
 
     sql = '''
         SELECT ligne_panier.utilisateur_id,
@@ -51,7 +56,7 @@ def client_cable_show():                                 # remplace client_index
 
     mycursor.execute(sql, (id_client,))
     cables_panier = mycursor.fetchall()
-
+#prix total du panier
     if len(cables_panier) >= 1:
         sql = '''
             SELECT SUM(ligne_panier.quantite_panier * cable.prix_cable) AS prix_total

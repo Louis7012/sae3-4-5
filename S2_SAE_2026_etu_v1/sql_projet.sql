@@ -172,7 +172,6 @@ INSERT INTO commande (id_commande, date_achat, etat_id, utilisateur_id) VALUES
 
 INSERT INTO ligne_commande (cable_id, commande_id, quantite_commande, prix) VALUES
 (1, 1001, 2, 990),
-(5, 1001, 1, 790),
 (3, 1002, 1, 1990),
 (2, 1002, 2, 1490),
 (4, 1003, 3, 650);
@@ -183,7 +182,6 @@ INSERT INTO ligne_commande (cable_id, commande_id, quantite_commande, prix) VALU
 
 INSERT INTO ligne_panier (cable_id, utilisateur_id, quantite_panier, date_ajout) VALUES
 (2, 1, 1, '2026-01-29'),
-(5, 1, 2, '2026-01-28'),
 (1, 2, 1, '2026-01-27'),
 (3, 2, 1, '2026-01-29');
 
