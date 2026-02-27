@@ -70,13 +70,22 @@ def show_accueil():
 @app.route('/admin/cable/show')
 def show_admin_cable():
     mycursor = get_db().cursor()
-    # On récupère les données des câbles
     sql = "SELECT id_cable, id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable;"
     mycursor.execute(sql)
     liste_cables = mycursor.fetchall()
-
-    # C'est ici qu'on fait le lien avec ton fichier .html
     return render_template('admin/cable/show_cable.html', cables=liste_cables)
+
+@app.route('/admin/cable/edit')
+def edit_admin_cable():
+    mycursor = get_db().cursor()
+    id_cable = request.args.get('id_cable')
+    sql = "SELECT id_cable, id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable WHERE id_cable = %s;"
+    mycursor.execute(sql, id_cable)
+    cable = mycursor.fetchone()
+    sql = "SELECT * FROM type_prise;"
+    mycursor.execute(sql)
+    type_prise = mycursor.fetchall()
+    return render_template('admin/cable/edit_cable.html', cable=cable, type_prise=type_prise)
 
 ##################
 # Authentification
