@@ -101,24 +101,27 @@ def client_panier_delete():
 def client_panier_vider():
     mycursor = get_db().cursor()
     client_id = session['id_user']
-    quantite = request.form.get('quantite')
-    id_cable = request.form.get('id_cable')
-    sql = ''' SELECT cable_id, quantite_panier
-        FROM ligne_panier
-        WHERE utilisateur_id = %s
-        '''
-    mycursor.execute(sql, (client_id,))
-    items_panier = []
-    for item in items_panier:
-        sql = ''' DELETE FROM ligne_panier
-        WHERE utilisateur_id = %s'''
-        mycursor.execute(sql, (client_id,))
 
-        sql2=''' UPDATE cable
-            SET stock = stock + %s
-            WHERE id_cable = %s'''
-        mycursor.execute(sql2, (quantite, id_cable))
-        get_db().commit()
+    # Récupère tous les articles du panier de l'utilisateur
+    sql = ''' SELECT cable_id, quantite_panier
+              FROM ligne_panier
+              WHERE utilisateur_id = %s '''
+    mycursor.execute(sql, (client_id,))
+    items_panier = mycursor.fetchall()
+
+    for item in items_panier:
+        # Remet le stock à jour
+        sql2 = ''' UPDATE cable
+                   SET stock = stock + %s
+                   WHERE id_cable = %s '''
+        mycursor.execute(sql2, (item['quantite_panier'], item['cable_id']))
+
+    # Supprime toutes les lignes du panier de l'utilisateur !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    sql = ''' DELETE FROM ligne_panier
+              WHERE utilisateur_id = %s '''
+    mycursor.execute(sql, (client_id,))
+
+    get_db().commit()
     return redirect('/client/cable/show')
 
 
@@ -126,29 +129,32 @@ def client_panier_vider():
 def client_panier_delete_line():
     mycursor = get_db().cursor()
     id_client = session['id_user']
-    #id_declinaison_cable = request.form.get('id_declinaison_cable')
     id_cable = request.form.get('id_cable')
-    quantite = request.form.get('quantite')
 
-
-    sql = '''SELECT *
-    FROM ligne_panier
-    WHERE cable_id = %s AND utilisateur_id = %s;'''
+    # Récupère la quantité exacte dans le panier avant suppression !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    sql = '''SELECT quantite_panier
+             FROM ligne_panier
+             WHERE cable_id = %s AND utilisateur_id = %s'''
     mycursor.execute(sql, (id_cable, id_client))
+    item = mycursor.fetchone()
 
+    if item is not None:
+        quantite = item['quantite_panier']
 
-    sql = '''DELETE FROM ligne_panier
-            WHERE utilisateur_id = %s AND cable_id = %s'''
+        # Supprime la ligne du panier !!!!!!!!!!!!!!!!!!!!!!!!!
+        sql = '''DELETE FROM ligne_panier
+                 WHERE utilisateur_id = %s AND cable_id = %s'''
+        mycursor.execute(sql, (id_client, id_cable))
 
-    mycursor.execute(sql, (id_client, id_cable))
+        # Remet à jour le stock du câble !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        sql2 = '''UPDATE cable
+                  SET stock = stock + %s
+                  WHERE id_cable = %s'''
+        mycursor.execute(sql2, (quantite, id_cable))
 
-    sql2='''UPDATE cable
-            SET stock = stock + %s
-            WHERE id_cable = %s'''
-    mycursor.execute(sql, (quantite, id_cable))
-    get_db().commit()
+        get_db().commit()
+
     return redirect('/client/cable/show')
-
 
 @client_panier.route('/client/panier/filtre', methods=['POST'])
 def client_panier_filtre():
@@ -156,13 +162,38 @@ def client_panier_filtre():
     filter_prix_min = request.form.get('filter_prix_min', None)
     filter_prix_max = request.form.get('filter_prix_max', None)
     filter_types = request.form.getlist('filter_types', None)
-    # test des variables puis
-    # mise en session des variables
+
+    # filtrage mot
+    if filter_word and len(filter_word) > 0:
+        session['filter_word'] = filter_word.strip()
+    else:
+        session.pop('filter_word', None)
+
+    # filtrage prix minimum !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if filter_prix_min and filter_prix_min.isdigit():
+        session['filter_prix_min'] = filter_prix_min
+    else:
+        session.pop('filter_prix_min', None)
+
+    # filtrage prix maximum !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if filter_prix_max and filter_prix_max.isdigit():
+        session['filter_prix_max'] = filter_prix_max
+    else:
+        session.pop('filter_prix_max', None)
+
+    # filtrage types de câble !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    if filter_types:
+        session['filter_types'] = filter_types
+    else:
+        session.pop('filter_types', None)
+
     return redirect('/client/cable/show')
 
 
 @client_panier.route('/client/panier/filtre/suppr', methods=['POST'])
 def client_panier_filtre_suppr():
-    # suppression  des variables en session
-    print("suppr filtre")
+    session.pop('filter_word', None)
+    session.pop('filter_prix_min', None)
+    session.pop('filter_prix_max', None)
+    session.pop('filter_types', None)
     return redirect('/client/cable/show')
