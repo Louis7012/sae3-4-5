@@ -79,11 +79,12 @@ def client_panier_delete():
     mycursor.execute(sql, (id_client, id_cable))
     cable_panier = mycursor.fetchone()
 
-    if not(cable_panier is None) and cable_panier['quantite'] > 1:
-        sql = ''' UPDATE ligne_panier
-                SET quantite_panier = quantite_panier - 1
-                WHERE utilisateur_id = %s AND cable_id = %s '''
-        mycursor.execute(sql, (id_client, id_cable))
+    if cable_panier is not None and cable_panier['quantite_panier'] > 1:
+        sql = '''UPDATE cable
+                       SET stock = stock + 1
+                       WHERE id_cable = %s'''
+        mycursor.execute(sql, (id_cable,))
+
     else:
         sql = ''' DELETE FROM ligne_panier
                 WHERE utilisateur_id = %s AND cable_id = %s'''
