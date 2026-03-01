@@ -23,7 +23,7 @@ types_prise : tableau de dictionnaires
             <img class="card-img-top rounded mx-4 d-block"  style="width:200px; height:200px; border: 1px solid black; padding: 25px;"   id="img_output" src="{{ url_for('static', filename = 'images/') }}{{ cable.photo}}"  alt="image  de {{ cable.nom_cable }}" >
         {% endif %}
             <div class="w-25">
-                <form class="w-190" method="post" action="/admin/cable/edit" enctype="multipart/form-data">
+                <form class="w-190" method="post" action="/admin/cable/valid_edit" enctype="multipart/form-data">
                     <input type="hidden" value="{{ cable.id_cable }}" name="id_cable">
                     <label for="nom">Nom :
                         <input name="nom" type="text" value="{{ cable.nom_cable }}" class="form-control">
@@ -43,12 +43,14 @@ types_prise : tableau de dictionnaires
                             {% endfor %}
                         </select>
                     </label>
-                    <label for="description">Marque :
-                        <input name="description" type="text" value="{{ cable.marque }}" class="form-control">
+                    <label for="marque">Marque :
+                        <input name="marque" type="text" value="{{ cable.marque }}" class="form-control">
                     </label>
-                    <button class="btn btn-primary mt-2">
-                                Modifier
-                    </button>
+                <label for="stock" > Stock :
+                        <input name="stock" type="number" min="0" step="1" value="{{ cable.stock }}" class="form-control" >
+                    </label>
+                <br>
+                    <button class="btn btn-primary mt-2">Modifier</button>
                     <a class="btn btn-secondary mt-2" href="/admin/cable/show"  role="button">retour</a>
                 </form>
 
