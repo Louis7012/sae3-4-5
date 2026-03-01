@@ -17,8 +17,7 @@ admin_cable = Blueprint('admin_cable', __name__,
 @admin_cable.route('/admin/cable/show')
 def show_cable():
     mycursor = get_db().cursor()
-    sql = '''  requête admin_cable_1
-    '''
+    sql = "SELECT id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable;"
     mycursor.execute(sql)
     cables = mycursor.fetchall()
     return render_template('admin/cable/show_cable.html', cable=cables)
@@ -101,15 +100,11 @@ def delete_cable():
 def edit_cable():
     id_cable=request.args.get('id_cable')
     mycursor = get_db().cursor()
-    sql = '''
-    requête admin_cable_6    
-    '''
+    sql =  "SELECT id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable WHERE id_cable = %s;"
     mycursor.execute(sql, id_cable)
     cable = mycursor.fetchone()
     print(cable)
-    sql = '''
-    requête admin_cable_7
-    '''
+    sql = "SELECT * FROM type_prise;"
     mycursor.execute(sql)
     types_prise = mycursor.fetchall()
 
@@ -134,10 +129,9 @@ def valid_edit_cable():
     image = request.files.get('image', '')
     type_prise_id = request.form.get('type_prise_id', '')
     prix = request.form.get('prix', '')
-    description = request.form.get('description')
-    sql = '''
-       requête admin_cable_8
-       '''
+    marque = request.form.get('marque')
+    stock = request.form.get('stock')
+    sql = "SELECT photo FROM cable WHERE id_cable=%s;"
     mycursor.execute(sql, id_cable)
     image_nom = mycursor.fetchone()
     image_nom = image_nom['image']
@@ -151,8 +145,8 @@ def valid_edit_cable():
             image.save(os.path.join('static/images/', filename))
             image_nom = filename
 
-    sql = '''  requête admin_cable_9 '''
-    mycursor.execute(sql, (nom, image_nom, prix, type_prise_id, description, id_cable))
+    sql = "UPDATE cable SET nom_cable=%s, prix_cable=%s, photo=%s, type_prise_id=%s, marque=%s, stock=%s WHERE id_cable = %s;"
+    mycursor.execute(sql, (nom, prix, image_nom, type_prise_id, marque, stock, id_cable))
 
     get_db().commit()
     if image_nom is None:
