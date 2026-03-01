@@ -14,6 +14,146 @@ client_commande = Blueprint('client_commande', __name__,
 def client_commande_valide():
     mycursor = get_db().cursor()
     id_client = session['id_user']
+
+    sql = '''
+        SELECT lp.cable_id,
+               lp.quantite_panier,
+               c.nom_cable,
+               c.prix_cable
+        FROM ligne_panier lp
+        JOIN cable c ON c.id_cable = lp.cable_id
+        WHERE lp.utilisateur_id = %s
+    '''
+    mycursor.execute(sql, (id_client,))
+    cables_panier = mycursor.fetchall()
+
+    if not cables_panier:
+        flash("Panier vide", "alert-warning")
+        return redirect('/client/cable/show')
+
+    prix_total = sum(item['prix_cable'] * item['quantite_panier']
+                     for item in cables_panier)
+
+    return render_template(
+        'client/boutique/panier_validation_adresses.html',
+        cables_panier=cables_panier,
+        prix_total=prix_total,
+        validation=1
+    )
+
+
+@client_commande.route('/client/commande/add', methods=['POST'])
+def client_commande_add():
+    mycursor = get_db().cursor()
+    id_client = session['id_user']
+
+    # récupérer panier !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    sql = '''
+        SELECT lp.cable_id,
+               lp.quantite_panier,
+               c.prix_cable
+        FROM ligne_panier lp
+        JOIN cable c ON c.id_cable = lp.cable_id
+        WHERE lp.utilisateur_id = %s
+    '''
+    mycursor.execute(sql, (id_client,))
+    items = mycursor.fetchall()
+
+    if not items:
+        flash("Panier vide", "alert-warning")
+        return redirect('/client/cable/show')
+
+    # créer commande (etat 1 = en attente) !!!!!!!!!
+    sql = '''
+        INSERT INTO commande(date_achat, etat_id, utilisateur_id)
+        VALUES (CURDATE(), 1, %s)
+    '''
+    mycursor.execute(sql, (id_client,))
+
+    # récupérer id_commande
+    mycursor.execute("SELECT LAST_INSERT_ID() as id")
+    id_commande = mycursor.fetchone()['id']
+
+    # insérer lignes_commande !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    for item in items:
+        sql = '''
+            INSERT INTO ligne_commande
+            (cable_id, commande_id, quantite_commande, prix)
+            VALUES (%s, %s, %s, %s)
+        '''
+        mycursor.execute(sql, (
+            item['cable_id'],
+            id_commande,
+            item['quantite_panier'],
+            item['prix_cable']
+        ))
+
+    # vider panier
+    sql = "DELETE FROM ligne_panier WHERE utilisateur_id = %s"
+    mycursor.execute(sql, (id_client,))
+
+    get_db().commit()
+
+    flash("Commande validée", "alert-success")
+    return redirect('/client/commande/show')
+
+
+
+@client_commande.route('/client/commande/show', methods=['get','post'])
+def client_commande_show():
+    mycursor = get_db().cursor()
+    id_client = session['id_user']
+    sql = '''  SELECT c.id_commande,
+     c.date_achat,
+     c.etat_id,
+     e.libelle,
+     SUM(lc.quantite_commande) AS nbr_cables,
+     SUM(lc.prix * lc.quantite_commande) AS prix_total
+     FROM commande c
+     LEFT JOIN ligne_commande lc ON lc.commande_id = c.id_commande
+        JOIN etat e ON c.etat_id = e.id_etat
+        WHERE c.utilisateur_id = %s
+        GROUP BY c.id_commande, c.date_achat, c.etat_id, e.libelle
+        ORDER BY c.etat_id ASC, c.date_achat DESC;
+     '''
+    mycursor.execute(sql, (id_client, ))
+    commandes = mycursor.fetchall()
+
+    cables_commande = None
+    commande_adresses = None
+    id_commande = request.args.get('id_commande', None)
+    if id_commande != None:
+        print(id_commande)
+        sql = ''' SELECT cable.nom_cable, 
+        SUM(lc.quantite_commande) as quantite_commande,
+          lc.prix,
+          SUM(lc.prix * lc.quantite_commande) AS prix_total
+          FROM ligne_commande lc '''
+
+        # partie 2 : selection de l'adresse de livraison et de facturation de la commande selectionnée
+        sql = ''' selection des adressses '''
+
+    return render_template('client/commandes/show.html'
+                           , commande=commandes
+                           , cables_commande=cables_commande
+                           , commande_adresses=commande_adresses
+                           )
+#! /usr/bin/python
+# -*- coding:utf-8 -*-
+from flask import Blueprint
+from flask import Flask, request, render_template, redirect, url_for, abort, flash, session, g
+from datetime import datetime
+from connexion_db import get_db
+
+client_commande = Blueprint('client_commande', __name__,
+                        template_folder='templates')
+
+
+# validation de la commande : partie 2 -- vue pour choisir les adresses (livraision et facturation)
+@client_commande.route('/client/commande/valide', methods=['POST'])
+def client_commande_valide():
+    mycursor = get_db().cursor()
+    id_client = session['id_user']
     sql = ''' selection des cables d'un panier 
     '''
     cables_panier = []
