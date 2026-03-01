@@ -32,7 +32,7 @@ cables (tableau de dictionnaires)
                   <td>{{ ligne.nom_cable }}</td>
                   <td>{{ ligne.id_cable }}</td>
                   <td><span style="color: red">{{ ligne.blindage }}</span> ({{ ligne.type_prise_id }})</td>
-                  <td>{#{ ligne.prix_cable }#}  {{ "{:,.2f} €".format(ligne.prix_cable | default(0)) }}</td>>
+                  <td>{#{ ligne.prix_cable }#}  {{ "{:,.2f} €".format(ligne.prix_cable | default(0)) }}</td>
                   <td>
                   {% if ligne.stock is defined %}
                      {% if ligne.stock != None  %}
