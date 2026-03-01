@@ -171,10 +171,10 @@ INSERT INTO commande (id_commande, date_achat, etat_id, utilisateur_id) VALUES
 -- =========================
 
 INSERT INTO ligne_commande (cable_id, commande_id, quantite_commande, prix) VALUES
-(1, 1001, 2, 990),
-(3, 1002, 1, 1990),
-(2, 1002, 2, 1490),
-(4, 1003, 3, 650);
+(1, 1001, 2, 9.90),
+(3, 1002, 1, 19.90),
+(2, 1002, 2, 14.90),
+(4, 1003, 3, 6.50);
 
 -- =========================
 -- 6) PANIER
