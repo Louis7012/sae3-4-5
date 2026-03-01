@@ -47,7 +47,7 @@
 
             {% if cables_commande[0].etat_id == 1 %}
             <form action="/admin/commande/valider"  style="display: inline-block;"  method="post">
-                  <input type="hidden" name="idCommande" value="{{ cables_commande[0].id }}">
+                  <input type="hidden" name="id_commande" value="{{ cables_commande[0].id }}">
                   <button class="btn btn-primary" > Valider (Expédier) </button>
             </form>
             {% endif %}
@@ -82,12 +82,12 @@
                                 </td>
                                 <td> {{ commande.libelle }}</td>
                                 <td style="text-align: center;">
-                                    <form action="/admin/commande/valider" style="display: inline-block;"  method="post">
+                                    <form action="/admin/commandes/valider" style="display: inline-block;"  method="post">
                                         <input type="hidden" name="id_commande" value="{{ commande.id_commande }}">
                                         <button class="btn btn-primary" > Valider (Expédier) </button>
                                     </form>
-                                    <a href="/admin/commande/show?id_commande={{ commande.id_commande }}">
-                                        <button class="btn btn-primary" > Details </button>
+                                    <a href="/admin/commandes/show?id_commande={{ commande.id_commande }}">
+                                        <button class="btn btn-primary" > Détails </button>
                                     </a>
                                 </td>
                             </tr>
