@@ -81,7 +81,7 @@ def client_coordonnee_add_adresse_valide():
     # Max 4 adresses valides
     mycursor.execute("SELECT COUNT(*) AS nb FROM adresse WHERE utilisateur_id=%s AND est_valide=1", id_client)
     if mycursor.fetchone()['nb'] >= 4:
-        flash("⚠️ Vous avez atteint le maximum de 4 adresses valides.", 'alert-warning')
+        flash("Vous avez atteint le maximum de 4 adresses valides.", 'alert-warning')
         return redirect('/client/coordonnee/show')
 
     # La nouvelle adresse devient favorite
@@ -103,7 +103,7 @@ def client_coordonnee_delete_adresse():
     mycursor.execute("SELECT * FROM adresse WHERE id_adresse=%s AND utilisateur_id=%s", (id_adresse, id_client))
     adresse = mycursor.fetchone()
     if not adresse:
-        flash("⚠️ Vous n'êtes pas autorisé à supprimer cette adresse.", 'alert-warning')
+        flash("Vous n'êtes pas autorisé à supprimer cette adresse.", 'alert-warning')
         return redirect('/client/coordonnee/show')
 
     # Vérifier si utilisée dans une commande
@@ -145,7 +145,7 @@ def client_coordonnee_edit_adresse():
     mycursor.execute("SELECT * FROM adresse WHERE id_adresse=%s AND utilisateur_id=%s", (id_adresse, id_client))
     adresse = mycursor.fetchone()
     if not adresse:
-        flash("⚠️ Adresse introuvable.", 'alert-warning')
+        flash("Adresse introuvable.", 'alert-warning')
         return redirect('/client/coordonnee/show')
     return render_template('client/coordonnee/edit_adresse.html', adresse=adresse)
 
@@ -164,7 +164,7 @@ def client_coordonnee_edit_adresse_valide():
     mycursor.execute("SELECT * FROM adresse WHERE id_adresse=%s AND utilisateur_id=%s", (id_adresse, id_client))
     adresse = mycursor.fetchone()
     if not adresse:
-        flash("⚠️ Vous n'êtes pas autorisé à modifier cette adresse.", 'alert-warning')
+        flash("Vous n'êtes pas autorisé à modifier cette adresse.", 'alert-warning')
         return redirect('/client/coordonnee/show')
 
     # Vérification code postal
@@ -185,7 +185,7 @@ def client_coordonnee_edit_adresse_valide():
         # Vérifier quota
         mycursor.execute("SELECT COUNT(*) AS nb FROM adresse WHERE utilisateur_id=%s AND est_valide=1", id_client)
         if mycursor.fetchone()['nb'] >= 4:
-            flash("⚠️ Maximum de 4 adresses valides atteint.", 'alert-warning')
+            flash("Maximum de 4 adresses valides atteint.", 'alert-warning')
             mycursor.execute("UPDATE adresse SET est_valide=1 WHERE id_adresse=%s", id_adresse)  # annuler
             get_db().commit()
             return redirect('/client/coordonnee/show')
@@ -209,7 +209,7 @@ def client_coordonnee_set_favorite():
     id_adresse = request.form.get('id_adresse')
     mycursor.execute("SELECT id_adresse FROM adresse WHERE id_adresse=%s AND utilisateur_id=%s", (id_adresse, id_client))
     if not mycursor.fetchone():
-        flash("⚠️ Non autorisé.", 'alert-warning')
+        flash("Non autorisé.", 'alert-warning')
         return redirect('/client/coordonnee/show')
     mycursor.execute("UPDATE adresse SET est_favorite=0 WHERE utilisateur_id=%s", id_client)
     mycursor.execute("UPDATE adresse SET est_favorite=1 WHERE id_adresse=%s", id_adresse)
