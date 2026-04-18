@@ -1,33 +1,16 @@
 {% extends "client/layout_client.html" %}
 {% block body %}
-
-    <div class="container  container-md">
-      <form method="post" action="/client/coordonnee/edit" >
-        <fieldset>
-            <legend> Modifier ses informations personnelles</legend>
-        <input id="id_user" type="hidden" value="{{ utilisateur.id_utilisateur }}" >
-
-        <div class="mb-3">
-            <label class="form-label" for="login">login utilisateur : </label>
-            <input class="form-control" id="login" type="text" required name="login" {% if utilisateur.login != "None" %}value="{{ utilisateur.login }}" {% endif %} >
-        </div>
-        <div class="mb-3">
-                <label class="form-label" for="nom">nom : </label>
-                <input class="form-control" id="nom" type="text" required name="nom" {% if utilisateur.nom != "None" %}value="{{ utilisateur.nom }}" {% endif %} >
-        </div>
-        <div class="mb-3">
-            <label class="form-label" for="email">email : </label>
-            <input class="form-control" id="email" type="email" required name="email" {% if utilisateur.email != "None" %}value="{{ utilisateur.email }}" {% endif %} >
-        </div>
-
-            <div class="col-12">
-                <button class="btn btn-primary" type="submit">Valider</button>
-                <a href="/client/coordonnee/show" class="btn btn-primary">Retour</a>
-            </div>
-
-        </fieldset>
-      </form>
-
+<div class="container mt-3">
+  <h3>Modifier mes informations</h3>
+  <form action="/client/coordonnee/edit" method="post">
+    <div class="mb-2"><label>Nom</label>
+      <input type="text" name="nom" class="form-control" value="{{ utilisateur.nom if utilisateur else '' }}" required></div>
+    <div class="mb-2"><label>Login</label>
+      <input type="text" name="login" class="form-control" value="{{ utilisateur.login if utilisateur else '' }}" required></div>
+    <div class="mb-2"><label>Email</label>
+      <input type="email" name="email" class="form-control" value="{{ utilisateur.email if utilisateur else '' }}" required></div>
+    <button class="btn btn-warning">Enregistrer</button>
+    <a class="btn btn-secondary" href="/client/coordonnee/show">Annuler</a>
+  </form>
 </div>
-
 {% endblock %}

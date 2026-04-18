@@ -4,33 +4,18 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>SAE BDD</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" >
-    {% block stylesheets %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.css') }}" >
-        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/mes_styles.css') }}" >
-    {% endblock %}
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.css') }}">
 </head>
 <body>
-
 {% include('auth/_nav.html') %}
-
 <div class="container">
     {% block body %}
-        <h4>templates/auth/layout.html</h4>
         <h2>Site de vente : projet SAE S2 BDD</h2>
-        <br><br>
-        <a href="/base/init">init.</a>
-        Robin<br>
-	Louis<br>
-	ANTOINE<br>
-	Guilian<br>
+        <a href="/login" class="btn btn-primary">Se connecter</a>
+        <a href="/signup" class="btn btn-outline-primary">S'inscrire</a>
+        <br><br><a href="/base/init">Initialiser la base</a>
     {% endblock %}
-</div><!-- /.container -->
-
-{% block javascripts %}
-    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.js') }}" ></script>
-{% endblock %}
-
+</div>
 </body>
 </html>
-

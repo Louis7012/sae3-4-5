@@ -1,44 +1,24 @@
 {% extends 'admin/layout_admin.html' %}
-
-
-{% block javascripts %}
-{#    attention il faut importer la bibliotheque chart.js avant de définir l'objet chart#}
-    {{ super() }}
-   {# <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.js') }}" ></script>#}
-{% endblock %}
-
-{% block javascripts_head %}
-{#    attention il faut importer la bibliotheque chart.js avant de définir l'objet chart#}
-{#    <script src="{{ url_for('static', filename='chart.js') }}" ></script>#}
-      <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-{% endblock %}
-
-{% block title %}
-    <title>test carte</title>
-{% endblock %}
-
 {% block body %}
-    <a href="https://github.com/regisenguehard/carte-france-svg/blob/master/carte-france-svg.html" target="_blank">exemple github carte</a>
-    <br>
-    <a href="https://www.youtube.com/watch?v=UZs8l50gxjU" target="_blank"> video graficart</a>
-    <br>
-    <a href="https://www.amcharts.com/svg-maps/?map=franceDepartments"> github carte svg</a>
-    <br>
-
-    <div class="text-center border w-50 m-auto">
-        <h2 class="text-center">Données sur les adresses clients</h2>
-        {% include 'admin/dataviz/franceMap.html' %}
-    </div>
-
-    <script>
-    {% for element in adresses %}
-        document.getElementById({{ element['dep'] }}).style.fill= "#000000";
-        document.getElementById({{ element['dep'] }}).setAttribute("fill-opacity", {{ element['indice'] }});
+<div class="container mt-3">
+  <h2>📍 Commandes par département</h2>
+  <table class="table table-sm table-bordered">
+    <thead class="table-dark">
+      <tr><th>Département</th><th>Nb commandes</th><th>Barre</th><th>CA (€)</th></tr>
+    </thead>
+    <tbody>
+    {% for a in adresses %}
+      <tr>
+        <td><strong>{{ a.dep }}</strong></td>
+        <td>{{ a.nombre }}</td>
+        <td><div style="background:#0d6efd;height:18px;width:{{ a.pct_nombre }}%;min-width:2px"></div></td>
+        <td>{{ "%.2f"|format(a.chiffre_affaires) if a.chiffre_affaires else '0.00' }}</td>
+      </tr>
     {% endfor %}
-    </script>
-
-{#    /* couleur avec transparence */#}
-{#background-color : rgba(255,255,255,0.5);#}
-{#    https://web-color.aliasdmc.fr/couleur-web-white-avec-transparence.html#}
-
+    {% if not adresses %}
+      <tr><td colspan="4" class="text-muted">Aucune donnée.</td></tr>
+    {% endif %}
+    </tbody>
+  </table>
+</div>
 {% endblock %}

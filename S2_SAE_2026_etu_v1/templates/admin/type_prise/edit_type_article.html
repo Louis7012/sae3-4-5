@@ -1,25 +1,16 @@
 {% extends 'admin/layout_admin.html' %}
-
-{% block title %}
-    <title>modifier un type d'article</title>
-{% endblock %}
-
 {% block body %}
-  {% if error %}
-    <p class=error><strong>Error:</strong> {{ error }}
-  {% endif %}
-  <form method="post" action="/admin/type-article/edit">
-    <fieldset>
-        <legend> Modifier un type d'article</legend>
-        <div class="mb-3">
-        <input type="hidden" name="id_type_article" size="18" value="{{ type_article.id_type_article }}" id="id">
-        <label for="libelle">libellé</label><br>
-
-        <input class="form-select" type="text" name="libelle" size="18" value="{{ type_article.libelle }}" id="libelle"><br>
-        </div>
-        <div class="col-12">
-        <button class="btn btn-primary" type="submit">Valider</button>
-        </div>
-    </fieldset>
+<div class="container mt-3">
+  <h3>Modifier le type de prise</h3>
+  <form action="/admin/type_prise/edit" method="post" class="w-25">
+    <input type="hidden" name="id_type_prise" value="{{ type_article.id_type_prise if type_article else '' }}">
+    <div class="mb-2">
+      <label>Libellé</label>
+      <input type="text" name="libelle" class="form-control"
+             value="{{ type_article.nom_type_prise if type_article else '' }}" required>
+    </div>
+    <button class="btn btn-warning">Enregistrer</button>
+    <a class="btn btn-secondary" href="/admin/type_prise/show">Annuler</a>
   </form>
+</div>
 {% endblock %}

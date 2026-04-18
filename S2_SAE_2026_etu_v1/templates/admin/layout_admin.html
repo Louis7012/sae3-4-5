@@ -3,26 +3,31 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>SAE BDD</title>
-    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" >
-    {% block stylesheets %}
-        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.css') }}" >
-        <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/mes_styles.css') }}" >
-    {% endblock %}
-{% block javascripts_head %}
-{% endblock %}
+    <title>SAE BDD — Admin</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/bootstrap.css') }}">
+    <style>
+        /* Menu déroulant CSS pur */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content { display: none; position: absolute; background: #fff;
+            border: 1px solid #ccc; z-index: 999; min-width: 200px; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .dropdown-content a { display: block; padding: 8px 16px;
+            color: #333; text-decoration: none; }
+        .dropdown-content a:hover { background: #f0f0f0; }
+    </style>
 </head>
 <body>
 {% include('admin/_nav_admin.html') %}
-<div class="container  container-md">
-{% block body %}
-    <h4 style="color:red">page Admin : templates/admin/layout_admin.html</h4>
-    <h3 style="color: red">Bonjour {{ session['login'] }} , votre Rôle : {{ session['role'] }}</h3>
-{% endblock %}
+<div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert {{ category }}" role="alert">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block body %}{% endblock %}
 </div>
-{% block javascripts %}
-    <script src="{{ url_for('static', filename='assets/js/bootstrap.bundle.js') }}" ></script>
-    <script src="{{ url_for('static', filename='assets/js/perso_admin.js') }}" ></script>
-{% endblock %}
 </body>
 </html>

@@ -1,83 +1,69 @@
 #! /usr/bin/python
-# -- coding:utf-8 --
-
-from flask import Blueprint, request, render_template, redirect, session, flash
+# -*- coding:utf-8 -*-
+from flask import Blueprint, request, render_template, redirect, flash, session
 from connexion_db import get_db
 
 admin_commande = Blueprint('admin_commande', __name__, template_folder='templates')
 
 
-@admin_commande.route('/admin')
 @admin_commande.route('/admin/commande/index')
-def admin_index():
-    return render_template('admin/layout_admin.html')
-
-
-@admin_commande.route('/admin/commande/show', methods=['GET'])
-def admin_commande_show():
-
-    cursor = get_db().cursor()
-
-    sql_commandes = """
-        SELECT
-            c.id_commande,
-            u.login,
-            u.id_utilisateur,
-            c.date_achat,
-            SUM(lc.quantite_commande) AS nbr_articles,
-            SUM(lc.quantite_commande * lc.prix) AS prix_total,
-            c.etat_id,
-            e.libelle
+def admin_commande_index():
+    mycursor = get_db().cursor()
+    mycursor.execute("""
+        SELECT c.id_commande, c.date_achat, c.etat_id, e.libelle,
+               u.login, u.nom, u.email,
+               SUM(lc.quantite_commande) AS nb_articles,
+               SUM(lc.prix * lc.quantite_commande) AS prix_total
         FROM commande c
-        JOIN utilisateur u ON u.id_utilisateur = c.utilisateur_id
-        JOIN ligne_commande lc ON lc.commande_id = c.id_commande
-        JOIN etat e ON e.id_etat = c.etat_id
-        WHERE u.role = 'ROLE_client'
-        GROUP BY c.id_commande, u.login, u.id_utilisateur, c.date_achat, c.etat_id, e.libelle
+        JOIN utilisateur u ON c.utilisateur_id=u.id_utilisateur
+        JOIN etat e ON c.etat_id=e.id_etat
+        LEFT JOIN ligne_commande lc ON lc.commande_id=c.id_commande
+        GROUP BY c.id_commande
         ORDER BY c.date_achat DESC
-    """
-    cursor.execute(sql_commandes)
-    commandes = cursor.fetchall()
-    cables_commande = None
+    """)
+    commandes = mycursor.fetchall()
+    mycursor.execute("SELECT * FROM etat")
+    etats = mycursor.fetchall()
+    return render_template('admin/commandes/show.html', commandes=commandes, etats=etats)
+
+
+@admin_commande.route('/admin/commande/show')
+def admin_commande_show():
     id_commande = request.args.get('id_commande')
+    mycursor = get_db().cursor()
+    mycursor.execute("""
+        SELECT lc.*, ca.nom_cable, l.nom_longueur, co.nom_couleur
+        FROM ligne_commande lc
+        JOIN cable ca ON lc.cable_id=ca.id_cable
+        LEFT JOIN declinaison_cable dc ON lc.declinaison_cable_id=dc.id_declinaison_cable
+        LEFT JOIN longueur l ON dc.longueur_id=l.id_longueur
+        LEFT JOIN couleur co ON dc.couleur_id=co.id_couleur
+        WHERE lc.commande_id=%s
+    """, id_commande)
+    lignes = mycursor.fetchall()
+    mycursor.execute("""
+        SELECT c.*, u.login, u.nom, u.email,
+               al.nom AS nom_liv, al.rue AS rue_liv, al.code_postal AS cp_liv, al.ville AS ville_liv,
+               af.nom AS nom_fact, af.rue AS rue_fact, af.code_postal AS cp_fact, af.ville AS ville_fact
+        FROM commande c
+        JOIN utilisateur u ON c.utilisateur_id=u.id_utilisateur
+        LEFT JOIN adresse al ON c.adresse_livraison_id=al.id_adresse
+        LEFT JOIN adresse af ON c.adresse_facturation_id=af.id_adresse
+        WHERE c.id_commande=%s
+    """, id_commande)
+    commande = mycursor.fetchone()
+    mycursor.execute("SELECT * FROM etat")
+    etats = mycursor.fetchall()
+    return render_template('admin/commandes/show.html',
+                           commandes=None, detail_lignes=lignes, commande=commande, etats=etats)
 
-    if id_commande:
-        sql_details = """
-            SELECT
-                c.nom_cable,
-                lc.quantite_commande,
-                lc.prix,
-                (lc.quantite_commande * lc.prix) AS prix_ligne
-            FROM ligne_commande lc
-            JOIN cable c ON c.id_cable = lc.cable_id
-            WHERE lc.commande_id = %s
-        """
-        cursor.execute(sql_details, (id_commande,))
-        cables_commande = cursor.fetchall()
 
-    return render_template(
-        'admin/commandes/show.html',
-        commandes=commandes,
-        cables_commande=cables_commande
-    )
-
-
-@admin_commande.route('/admin/commande/valider', methods=['POST'])
-def admin_commande_valider():
-    if 'id_user' not in session:
-        return redirect('/login')
-
-    cursor = get_db().cursor()
-    commande_id = request.form.get('id_commande')
-
-    if commande_id:
-        sql_update = """
-            UPDATE commande
-            SET etat_id = 3
-            WHERE id_commande = %s
-        """
-        cursor.execute(sql_update, (commande_id,))
-        get_db().commit()
-        flash("Commande expédiée", "success")
-
-    return redirect('/admin/commande/show')
+@admin_commande.route('/admin/commande/etat', methods=['POST'])
+def admin_commande_etat():
+    mycursor = get_db().cursor()
+    id_commande = request.form.get('id_commande')
+    etat_id = request.form.get('etat_id')
+    mycursor.execute("UPDATE commande SET etat_id=%s WHERE id_commande=%s", (etat_id, id_commande))
+    get_db().commit()
+    flash("État mis à jour", 'alert-success')
+    return redirect('/admin/commande/index')

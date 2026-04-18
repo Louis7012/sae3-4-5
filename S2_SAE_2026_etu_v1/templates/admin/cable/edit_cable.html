@@ -1,118 +1,58 @@
-{#
-cable (dictionnaire)
-id_cable, nom, type_prise_id, prix, image
-    * option :
-        * stock ,
-        * nb_avis ,
-        * nb_declinaisons
-
-types_prise : tableau de dictionnaires
-* tableau de "type_prise"
-    * id_type_prise, libelle
-#}
-
 {% extends 'admin/layout_admin.html' %}
-{% block title %}
-    <title>modifier un cable</title>
-{% endblock %}
-
 {% block body %}
-    <h2>modifier un cable</h2>
-        <div class="row mt-5">
-        {%  if cable.photo is not none %}
-            <img class="card-img-top rounded mx-4 d-block"  style="width:200px; height:200px; border: 1px solid black; padding: 25px;"   id="img_output" src="{{ url_for('static', filename = 'images/') }}{{ cable.photo}}"  alt="image  de {{ cable.nom_cable }}" >
-        {% endif %}
-            <div class="w-25">
-                <form class="w-190" method="post" action="/admin/cable/valid_edit" enctype="multipart/form-data">
-                    <input type="hidden" value="{{ cable.id_cable }}" name="id_cable">
-                    <label for="nom">Nom :
-                        <input name="nom" type="text" value="{{ cable.nom_cable }}" class="form-control">
-                    </label>
-                    <label for="prix" > Prix (€) :
-                        <input name="prix" type="number" min="0.0" step="0.01" value="{{ cable.prix_cable }}" class="form-control" >
-                    </label>
-                    <label for="image">Image :                       {# à modifier #}
-                        <input name="image"  onchange="loadFile(event)" type="file" class="form-control" value="{{ cable.photo }}">             {# à modifier #}
-                    </label>                                         {# à modifier #}
-{#                https://blog.miguelgrinberg.com/post/handling-file-uploads-with-flask#}
+<div class="container">
+<h3>Modifier le câble : {{ cable.nom_cable if cable else '' }}</h3>
+<form action="/admin/cable/edit" method="post" enctype="multipart/form-data">
+  <input type="hidden" name="id_cable" value="{{ cable.id_cable if cable else '' }}">
+  <div class="mb-2"><label>Nom</label>
+    <input type="text" name="nom" class="form-control" value="{{ cable.nom_cable if cable else '' }}" required></div>
+  <div class="mb-2"><label>Prix (€)</label>
+    <input type="number" step="0.01" name="prix" class="form-control" value="{{ cable.prix_cable if cable else '' }}" required></div>
+  <div class="mb-2"><label>Marque</label>
+    <input type="text" name="marque" class="form-control" value="{{ cable.marque if cable else '' }}"></div>
+  <div class="mb-2"><label>Stock</label>
+    <input type="number" name="stock" class="form-control" value="{{ cable.stock if cable else 0 }}"></div>
+  <div class="mb-2"><label>Type de prise</label>
+    <select name="type_prise_id" class="form-control">
+      {% for tp in types_prise %}
+        <option value="{{ tp.id_type_prise }}" {% if cable and cable.type_prise_id==tp.id_type_prise %}selected{% endif %}>{{ tp.nom_type_prise }}</option>
+      {% endfor %}
+    </select></div>
+  <div class="mb-2"><label>Image</label>
+    <input type="file" name="image" class="form-control">
+    {% if cable and cable.photo %}<small>Actuelle : {{ cable.photo }}</small>{% endif %}
+  </div>
+  <button class="btn btn-warning">Enregistrer</button>
+  <a class="btn btn-secondary" href="/admin/cable/show">Annuler</a>
+</form>
 
-                <label for="type_prise_id">Type de prise :
-                    <select name="type_prise_id" class="form-select">
-                            {% for type in type_prise %}
-                                 <option value="{{ type.id_type_prise }}" {% if type.id_type_prise == cable.type_prise_id %} selected {% endif %}> {{ type.nom_type_prise }}</option>
-                            {% endfor %}
-                        </select>
-                    </label>
-                    <label for="marque">Marque :
-                        <input name="marque" type="text" value="{{ cable.marque }}" class="form-control">
-                    </label>
-                <label for="stock" > Stock :
-                        <input name="stock" type="number" min="0" step="1" value="{{ cable.stock }}" class="form-control" >
-                    </label>
-                <br>
-                    <button class="btn btn-primary mt-2">Modifier</button>
-                    <a class="btn btn-secondary mt-2" href="/admin/cable/show"  role="button">retour</a>
-                </form>
-
-                <div class="container-fluid " style="width: 1000px;">
-
-                    <div style="display: flex; justify-content: space-between">
-                        <h3>déclinaison en fonction de la taille/couleur (variante)</h3>
-                        <a class="img-fluid" href="/admin/cable/add_declinaison?id_cable={{ cable.id_cable }}">
-                            <button class="btn btn-primary">
-                                Ajouter une déclinaison (variante)
-                            </button>
-                        </a>
-                    </div>
-                    <table class="table table-hover table-responsive">
-
-                        <th style="width: 300px">taille</th>
-                        <th style="width: 300px">couleur</th>
-                        <th style="width: 300px">stock</th>
-                        <th style="width: 300px">opérations</th>
-
-                        {% if declinaisons_cable | length == 0 %}
-                            <tr>
-                                <td>Aucun modèle</td>
-                                <td></td>
-                                <td></td>
-                                <td></td>
-                            </tr>
-                        {% else %}
-                            {% for declinaison_cable in declinaisons_cable %}
-                                <tr>
-                                    <td>
-                                        {{ declinaison_cable.libelle_taille }}
-                                    </td>
-                                    <td>
-                                        {{ declinaison_cable.libelle_couleur }}
-                                    </td>
-                                    <td>{{ declinaison_cable.stock }}</td>
-                                    <td style="display: flex">
-                                        <a class="img-fluid" href="/admin/declinaison_cable/delete?id_declinaison_cable={{ declinaison_cable.id_declinaison_cable }}&amp;id_cable={{ declinaison_cable.cable_id }}">
-                                            <button class="btn btn-primary mx-1">
-                                                supprimer
-                                            </button>
-                                        </a>
-                                        <a class="img-fluid" href="/admin/declinaison_cable/edit?id_declinaison_cable={{ declinaison_cable.id_declinaison_cable }}">
-                                            <button class="btn btn-primary mx-1">
-                                                editer
-                                            </button>
-                                        </a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        {% endif %}
-                    </table>
-
-                </div>
-
-            </div>
-            {% if pb_taille_uniq is defined and pb_taille_uniq==1 %}
-                    <br><span style="color: #fd7e14">(⚠️ pb sur les tailles : une taille unique est définie avec d'autres tailles)</span>
-            {% endif %}
-            {% if pb_couleur_uniq is defined and pb_couleur_uniq==1 %}
-                    <br><span style="color: #fd7e14">(⚠️ pb sur les couleurs : une couleur unique est définie avec d'autres couleurs)</span>
-            {% endif %}
-        </div>
+<hr>
+<h4>Déclinaisons (couleur / longueur)</h4>
+{% if cable %}
+<a class="btn btn-success btn-sm mb-2" href="/admin/declinaison_cable/add?id_cable={{ cable.id_cable }}">+ Ajouter une déclinaison</a>
+{% endif %}
+{% if declinaisons_cable %}
+<table class="table table-sm">
+  <thead><tr><th>ID</th><th>Longueur</th><th>Couleur</th><th>Stock</th><th>Prix</th><th>Actions</th></tr></thead>
+  <tbody>
+  {% for d in declinaisons_cable %}
+    <tr {% if d.stock == 0 %}class="table-warning"{% endif %}>
+      <td>{{ d.id_declinaison_cable }}</td>
+      <td>{{ d.nom_longueur }}</td>
+      <td><span style="background:{{ d.code_hex }};padding:2px 8px;border:1px solid #ccc">{{ d.nom_couleur }}</span></td>
+      <td>{% if d.stock == 0 %}<strong class="text-danger">0 ⚠️</strong>{% else %}{{ d.stock }}{% endif %}</td>
+      <td>{{ "%.2f €"|format(d.prix) if d.prix else '-' }}</td>
+      <td>
+        <a class="btn btn-sm btn-warning" href="/admin/declinaison_cable/edit?id_declinaison_cable={{ d.id_declinaison_cable }}">Modifier</a>
+        <a class="btn btn-sm btn-danger" href="/admin/declinaison_cable/delete?id_declinaison_cable={{ d.id_declinaison_cable }}&id_cable={{ cable.id_cable }}"
+           onclick="return confirm('Supprimer cette déclinaison ?')">Supprimer</a>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="text-muted">Aucune déclinaison.</p>
+{% endif %}
+</div>
 {% endblock %}

@@ -1,41 +1,59 @@
 {% extends 'admin/layout_admin.html' %}
-
-{% block title %}
-    <title>ajouter un cable</title>
-{% endblock %}
-
+{% block title %}<title>Ajouter un câble</title>{% endblock %}
 {% block body %}
-    <h2>ajouter un cable</h2>
-    <div class="row mt-5">
-        <img class="card-img-top rounded mx-4 d-block"  style="width:200px; height:200px; border: 1px solid black; padding: 5px;" id="img_output" src="{{ url_for('static', filename = 'images/')}}no_photo.jpeg" alt="">
-        <div class="w-25">
-            <form class="w-190" method="post" action="/admin/cable/add" enctype="multipart/form-data">
-                <label for="nom">Nom :
-                    <input name="nom" type="text" value=""  class="form-control" required>
-                </label>
-                <label for="prix">Prix (€) :
-                    <input name="prix" type="number" min="0.0" step="0.01" max="2147483647" value=""  class="form-control" required>
-                </label>
-                <label for="image"> Image :
-                    <input name="image" type="file" onchange="loadFile(event)"   class="form-control">
-                </label>
-
-                <label for="type_prise_id">Type de prise :
-                    <select name="type_prise_id" required class="form-select">
-                        <option value="">Sélectionner un type de prise</option>
-                        {% for type in type_prise %}
-                             <option value="{{ type.id_type_prise }}"> {{ type.nom_type_prise }}</option>
-                        {% endfor %}
-                    </select>
-                </label>
-                <label for="description">description :
-                    <input name="description" type="text" class="form-control" >
-                </label>
-                <label for="submit">
-                    <input name="submit" type="submit" value="Ajouter" class="btn btn-primary mt-2">
-                </label>
-            </form>
-        <a href="/admin/cable/show"><button class="btn btn-secondary mt-2">annuler</button></a>
-        </div>
+<div class="container mt-3">
+  <h2>Ajouter un câble</h2>
+  <form method="post" action="/admin/cable/add" enctype="multipart/form-data" class="w-50">
+    <div class="mb-2">
+      <label>Nom</label>
+      <input name="nom" type="text" class="form-control" required>
     </div>
+    <div class="mb-2">
+      <label>Prix (€)</label>
+      <input name="prix" type="number" step="0.01" min="0" class="form-control" required>
+    </div>
+    <div class="mb-2">
+      <label>Blindage</label>
+      <select name="blindage" class="form-control">
+        <option value="Oui">Oui</option>
+        <option value="Non">Non</option>
+      </select>
+    </div>
+    <div class="mb-2">
+      <label>Fournisseur</label>
+      <input name="fournisseur" type="text" class="form-control">
+    </div>
+    <div class="mb-2">
+      <label>Marque</label>
+      <input name="marque" type="text" class="form-control">
+    </div>
+    <div class="mb-2">
+      <label>Stock initial</label>
+      <input name="stock" type="number" min="0" class="form-control" value="0">
+    </div>
+    <div class="mb-2">
+      <label>Type de prise</label>
+      <select name="type_prise_id" required class="form-select">
+        <option value="">— Sélectionner —</option>
+        {% for tp in types_prise %}
+          <option value="{{ tp.id_type_prise }}">{{ tp.nom_type_prise }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-2">
+      <label>Longueur principale</label>
+      <select name="longueur_id" required class="form-select">
+        {% for l in longueurs %}
+          <option value="{{ l.id_longueur }}">{{ l.nom_longueur }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="mb-2">
+      <label>Image</label>
+      <input name="image" type="file" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-success">Ajouter</button>
+    <a href="/admin/cable/show" class="btn btn-secondary">Annuler</a>
+  </form>
+</div>
 {% endblock %}

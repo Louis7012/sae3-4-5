@@ -1,122 +1,44 @@
 {% extends 'admin/layout_admin.html' %}
-
-
-{% block javascripts %}
-{#    attention il faut importer la bibliotheque chart.js avant de définir l'objet chart#}
-    {{ super() }}
-   {# <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.js') }}" ></script>#}
-{% endblock %}
-
-{% block javascripts_head %}
-{#    attention il faut importer la bibliotheque chart.js avant de définir l'objet chart#}
-{#    <script src="{{ url_for('static', filename='chart.js') }}" ></script>#}
-      <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
-{% endblock %}
-
-{% block title %}
-    <title>afficher les types de prise</title>
-{% endblock %}
-
 {% block body %}
-<br>
+<div class="container mt-3">
+  <h2>📊 Dataviz — Stock par déclinaison</h2>
 
-    <h2> nombre de cables :
-{#    <span style="color: red;">{{ cout_total.nbr_cables }}</span></h2>#}
-
-<table class="table">
-    <thead class="thead-dark">
-        <tr>
-           <th>type de prise</th> <th>(id)</th><th>nombre de cables</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% if types_prises_nb | length >= 1 %}
-        {% for ligne in types_prises_nb %}
-           <tr>
-                  <td>{{ ligne.libelle }}</td>
-                  <td>{{ ligne.id_type_prise }}</td>
-                   <td><span style="color: red">
-                       {% if ligne.nbr_cables_stock is not none %}  {{ ligne.nbr_cables }} {% else %}
-                       pas d'cable {% endif %}
-                   </span></td>
-
-           </tr>
+  <div class="row">
+    <div class="col-6">
+      <h4>Stock par couleur</h4>
+      <table class="table table-sm table-bordered">
+        <thead class="table-dark">
+          <tr><th>Couleur</th><th>Qté en stock</th><th>Coût stock (€)</th><th>Barre</th></tr>
+        </thead>
+        <tbody>
+        {% for d in datas_show %}
+          <tr>
+            <td>{{ d.libelle }}</td>
+            <td>{{ d.nbr_cables }}</td>
+            <td>{{ "%.2f"|format(d.cout_stock) }}</td>
+            <td><div style="background:#36A2EB;height:18px;width:{{ d.pct_nbr_cables }}%;min-width:2px"></div></td>
+          </tr>
         {% endfor %}
-    {% else %}
-        pas de stock
-    {% endif %}
-    </tbody>
-</table>
-    <br>
-{#    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>#}
-
-<h2>visualisation de données : graph.js</h2>
-<h3>Documentation</h3>
-<br>
-    <a href="https://tobiasahlin.com/blog/chartjs-charts-to-get-you-started/" target="_blank"> tuto partie1 graph.js</a><br>
-    <a href="https://tobiasahlin.com/blog/introduction-to-chartjs" target="_blank"> tuto partie2 graph.js</a>&nbsp;
-<br>
-    <a href="https://www.youtube.com/watch?v=E2hytuQvLlE" target="_blank"> vidéo : flask + graph.js</a>&nbsp;
-    <br>
-
-{# https://jinja.palletsprojects.com/en/3.0.x/templates/#html-escaping #}
-    <div style="width: 900px; height: 500px; border: #0a53be 1px solid;">
-        <canvas id="Chart1" ></canvas>
+        </tbody>
+      </table>
     </div>
-    graphique 1
-    <script>
-	var ctx1 = document.getElementById("Chart1").getContext("2d");
-	var Chart1 = new Chart( ctx1, {
-  		type: "bar",
-  		data: {
-  			labels: {{ labels | safe }},
-  			datasets: [
-  				{
-  				label: "Type de prises (nombre)",
-  				data: {{ values | safe }},
-  				fill: false,
-                 backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850",
-             "#faf24c"
-             , "#6a6ce7","#55f68f","#D0c309","#c45000"],
-  				borderColor: "rgb(75,192,192)",
-  				lineTension: 0.1
-  				}
-  			]
-  		},
-  		option: {
-  			responsive: false
-  		}
-	});
-    </script>
-
-
-    <h2>demo graphique à secteurs : "camenberd" ,"donut" ( "pie-chart"  "doughtnut")</h2>
-
-    <canvas id="pie-chart" width="800" height="450"></canvas>
-
-    <script>
-	var Chart2 = new Chart(document.getElementById("pie-chart"), {
-    type: 'pie',
-    data: {
-      labels: {{ labels | safe }},
-      datasets: [{
-        label: "Type de prises (nombre)",
-         backgroundColor: ["#3e95cd", "#8e5ea2","#3cba9f","#e8c3b9","#c45850",
-             "#faf24c"
-             , "#6a6ce7","#55f68f","#D0c309","#c45000"],
-        data: {{ values | safe }},
-      }]
-    },
-    options: {
-      title: {
-        display: true,
-        text: 'Type cable : nombre'
-      }
-     }
-    });
-    </script>
-
-    <a href="https://www.youtube.com/watch?v=TcwYXIIM-fs" target="_blank">dataviz, c'est quoi en 1 mn ? (juste la première minute)</a>
-    <br>
-    <a href="https://www.youtube.com/watch?v=bZDnSUjfMt8" target="_blank">dataviz, c'est quoi ? (juste la première minute)</a>
+    <div class="col-6">
+      <h4>Stock par type de prise</h4>
+      <table class="table table-sm table-bordered">
+        <thead class="table-dark">
+          <tr><th>Type</th><th>Stock total</th><th>Barre</th></tr>
+        </thead>
+        <tbody>
+        {% for s in stock_par_type %}
+          <tr>
+            <td>{{ s.libelle }}</td>
+            <td>{{ s.stock_total }}</td>
+            <td><div style="background:#FF6384;height:18px;width:{{ s.pct_stock_total }}%;min-width:2px"></div></td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 {% endblock %}

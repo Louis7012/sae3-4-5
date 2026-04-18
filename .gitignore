@@ -1,5 +1,6 @@
-.idea
-connexion_db.py
-flask_run.sh
-__pycache__/*
-controllers/__pycache__/*
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.db
+.DS_Store

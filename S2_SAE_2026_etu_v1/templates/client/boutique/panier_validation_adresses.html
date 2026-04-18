@@ -1,73 +1,66 @@
 {% extends "client/layout_client.html" %}
 {% block body %}
-    <div class="container">
-        <div class="row align-self-right">
-            {% include('client/boutique/_panier.html') %}
+<div class="container mt-3">
+  <h2>Valider votre commande</h2>
+
+  <h4>Récapitulatif du panier</h4>
+  <table class="table table-sm">
+    <thead><tr><th>Câble</th><th>Déclinaison</th><th>Qté</th><th>Prix unitaire</th><th>Total</th></tr></thead>
+    <tbody>
+    {% for item in cables_panier %}
+      <tr>
+        <td>{{ item.nom_cable }}</td>
+        <td>
+          {% if item.nom_longueur %}{{ item.nom_longueur }}{% endif %}
+          {% if item.nom_couleur and item.nom_couleur != 'Unique' %} / {{ item.nom_couleur }}{% endif %}
+        </td>
+        <td>{{ item.quantite_panier }}</td>
+        <td>{{ "%.2f €"|format(item.prix_cable) }}</td>
+        <td>{{ "%.2f €"|format(item.prix_cable * item.quantite_panier) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr><td colspan="4"><strong>Total</strong></td><td><strong>{{ "%.2f €"|format(prix_total) }}</strong></td></tr></tfoot>
+  </table>
+
+  <form action="/client/commande/add" method="post">
+    {% if adresses %}
+      <div class="row">
+        <div class="col-6">
+          <h5>Adresse de livraison</h5>
+          <select name="adresse_livraison_id" class="form-control">
+            {% for a in adresses %}
+              <option value="{{ a.id_adresse }}" {% if a.id_adresse==id_adresse_fav %}selected{% endif %}>
+                {{ a.nom }} – {{ a.rue }}, {{ a.code_postal }} {{ a.ville }}
+                {% if a.est_favorite %}⭐{% endif %}
+              </option>
+            {% endfor %}
+          </select>
         </div>
-        <div class="row">
-             <br>
-            <a href="/client/coordonnee/show" class="btn btn-secondary mt-5 col-2"> ajouter une adresse (livrable 2)</a>
-            <form action="/client/commande/add"  style="display: inline-block;"  method="post" >
-            {% if adresses | length > 0 %}
-                <br>
-                    <h4>Choisisser l'adresse de livraison</h4>
-                    <select  name="id_adresse_livraison" name="adresse_livraison" required  class="form-select">
-                        <option value="">Sélectionner l'adresse de facturation</option>
-                        {% for adresse  in adresses %}
-
-                             <option value="{{ adresse.id_adresse }}"
-                             {% if id_adresse_fav != 0 and id_adresse_fav == adresse.id_adresse %}
-                                 selected
-                             {% endif %}
-
-                             >{{ adresse.nom }} ({{ adresse.code_postal }})
-                                 {{ adresse.ville }} - {{ adresse.rue }}
-                             {% if id_adresse_fav != 0 and id_adresse_fav == adresse.id_adresse %}
-                                 (f)
-                             {% endif %}
-
-                             </option>
-                        {% endfor %}
-                    </select>
-                    <br>
-
-                    <h4>Choisisser l'adresse de facturation</h4>
-                    adresse de facturation identique <input type="checkbox" name="adresse_identique" value="adresse_identique" id="adresse_identique" onclick="identique()">
-                <br>
-                    <select  id="id_adresse_facturation" name="id_adresse_facturation" required class="form-select">
-                        <option value="">Sélectionner l'adresse de livraison</option>
-                        {% for adresse  in adresses %}
-                             <option value="{{ adresse.id_adresse }}"
-                             {% if id_adresse_fav != 0 and id_adresse_fav == adresse.id_adresse %}
-                                 selected
-                             {% endif %}
-                             >{{ adresse.nom }} ({{ adresse.code_postal }})
-                                 {{ adresse.ville }} - {{ adresse.rue }}
-                             </option>
-                        {% endfor %}
-                    </select>
-                {%  else %}
-                    Il faut une adresse de livraison et de facturation pour valider la commande (livrable 2)
-                    <a href="/client/coordonnee/show"  class="btn btn-primary">Ajouter une adresse (livrable 2)</a>
-                {% endif %}
-                <br>
-                <button class="btn btn-primary mt-4" > Passer ma commande </button>
-            </form>
+        <div class="col-6">
+          <h5>Adresse de facturation</h5>
+          <select name="adresse_facturation_id" class="form-control">
+            {% for a in adresses %}
+              <option value="{{ a.id_adresse }}" {% if a.id_adresse==id_adresse_fav %}selected{% endif %}>
+                {{ a.nom }} – {{ a.rue }}, {{ a.code_postal }} {{ a.ville }}
+                {% if a.est_favorite %}⭐{% endif %}
+              </option>
+            {% endfor %}
+          </select>
         </div>
+      </div>
+      <p class="mt-2"><small><a href="/client/coordonnee/show">Gérer mes adresses</a></small></p>
+    {% else %}
+      <div class="alert alert-warning">Aucune adresse enregistrée. <a href="/client/coordonnee/add_adresse">Ajouter une adresse</a></div>
+    {% endif %}
+    <div class="mt-3">
+      <button class="btn btn-success">✓ Confirmer la commande</button>
+      <a class="btn btn-secondary" href="/client/cable/show">Continuer mes achats</a>
     </div>
+  </form>
 
-    <script>
-    function identique(){
-	if(document.getElementById('adresse_identique').checked == true)
-        {
-        document.getElementById("id_adresse_facturation").style.display = 'none';
-        document.getElementById("id_adresse_facturation").required = false;
-        }
-        else
-        {
-        document.getElementById("id_adresse_facturation").style.display = 'block';
-        document.getElementById("id_adresse_facturation").required = true;
-        }
-    };
-    </script>
+  <form action="/client/panier/vider" method="post" class="mt-2">
+    <button class="btn btn-outline-danger btn-sm">Vider le panier</button>
+  </form>
+</div>
 {% endblock %}

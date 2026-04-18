@@ -1,0 +1,22 @@
+{% extends 'admin/layout_admin.html' %}
+{% block body %}
+<div class="container mt-3">
+  <h2>📊 Dataviz — Wishlist &amp; Historique</h2>
+  <table class="table table-sm table-bordered">
+    <thead class="table-dark">
+      <tr><th>Type de prise</th><th>Articles en wishlist</th><th>Barre</th><th>Consultations (mois)</th><th>Barre</th></tr>
+    </thead>
+    <tbody>
+    {% for s in stats %}
+      <tr>
+        <td>{{ s.categorie }}</td>
+        <td>{{ s.nb_wishlist }}</td>
+        <td><div style="background:#FF9F40;height:18px;width:{{ s.pct_nb_wishlist }}%;min-width:2px"></div></td>
+        <td>{{ s.nb_historique_mois }}</td>
+        <td><div style="background:#36A2EB;height:18px;width:{{ s.pct_nb_historique_mois }}%;min-width:2px"></div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

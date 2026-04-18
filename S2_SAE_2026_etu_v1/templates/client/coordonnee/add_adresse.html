@@ -1,32 +1,18 @@
 {% extends "client/layout_client.html" %}
 {% block body %}
-
-<div class="m-auto p-3 border col-lg-6">
-    <form action="/client/coordonnee/add_adresse" method="post">
-        <table class="table w-auto" >
-            <tr>
-                <td>Utilisateur connecté :</td>
-                <td class="text-success bg-"> nom : {{ utilisateur.nom }} , login : {{ utilisateur.login }}</td>
-            </tr>
-            <tr> <td><label for="nom">Nom prénom  : <br>(pour la livraison/facturation)</label>
-                </td>
-                <td><input type="text" name="nom" required  maxlength="50" class="form-control" value="{{ nom }}" ></td>
-            </tr>
-            <tr>
-                <td><label for="rue">numéro de rue et nom :</label></td>
-                <td><input type="text" name="rue" required class="form-control" value="{{ rue }}" ></td>
-            </tr>
-            <tr>
-                <td>Code postal :</td>
-                <td><input type="number" name="code_postal" required  minlength="5" maxlength="5" class="form-control" value="{{ code_postal }}"></td>
-            </tr>
-            <tr>
-                <td>Ville :</td>
-                <td><input type="text" name="ville" required  maxlength="50" class="form-control" value="{{ ville }}" ></td>
-            </tr>
-        </table>
-        <button class="btn btn-primary" type="submit">Valider</button>
-    </form>
-
+<div class="container mt-3">
+  <h3>Ajouter une adresse</h3>
+  <form action="/client/coordonnee/add_adresse" method="post">
+    <div class="mb-2"><label>Nom / Destinataire</label>
+      <input type="text" name="nom" class="form-control" value="{{ nom|default('') }}" required></div>
+    <div class="mb-2"><label>Rue</label>
+      <input type="text" name="rue" class="form-control" value="{{ rue|default('') }}" required></div>
+    <div class="mb-2"><label>Code postal</label>
+      <input type="text" name="code_postal" class="form-control" value="{{ code_postal|default('') }}" maxlength="5" required></div>
+    <div class="mb-2"><label>Ville</label>
+      <input type="text" name="ville" class="form-control" value="{{ ville|default('') }}" required></div>
+    <button class="btn btn-success">Ajouter</button>
+    <a class="btn btn-secondary" href="/client/coordonnee/show">Annuler</a>
+  </form>
 </div>
 {% endblock %}

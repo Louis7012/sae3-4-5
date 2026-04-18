@@ -1,0 +1,54 @@
+{% extends 'admin/layout_admin.html' %}
+{% block body %}
+<div class="container mt-3">
+  <h2>📊 Dataviz — Commentaires &amp; Notes</h2>
+
+  <h4>Par type de prise</h4>
+  <table class="table table-sm table-bordered">
+    <thead class="table-dark">
+      <tr><th>Type de prise</th><th>Nb notes</th><th>Note moy.</th><th>Nb commentaires</th><th>Barre</th></tr>
+    </thead>
+    <tbody>
+    {% for s in stats_categories %}
+      <tr>
+        <td><a href="/admin/dataviz/commentaires?categorie={{ s.categorie }}">{{ s.categorie }}</a></td>
+        <td>{{ s.nb_notes }}</td>
+        <td>{{ s.note_moyenne if s.note_moyenne else '—' }}</td>
+        <td>{{ s.nb_commentaires }}</td>
+        <td><div style="background:#36A2EB;height:18px;width:{{ s.pct_nb_commentaires }}%;min-width:2px"></div></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+
+  <p>Voir le détail :
+    {% for cat in categories %}
+      <a class="btn btn-sm btn-outline-primary me-1" href="/admin/dataviz/commentaires?categorie={{ cat }}">{{ cat }}</a>
+    {% endfor %}
+    {% if categorie_sel %}
+      <a class="btn btn-sm btn-outline-secondary" href="/admin/dataviz/commentaires">Tout afficher</a>
+    {% endif %}
+  </p>
+
+  {% if categorie_sel and stats_articles %}
+    <hr>
+    <h4>Détail : {{ categorie_sel }}</h4>
+    <table class="table table-sm table-bordered">
+      <thead class="table-dark">
+        <tr><th>Câble</th><th>Nb notes</th><th>Note moy.</th><th>Nb commentaires</th><th>Barre notes</th></tr>
+      </thead>
+      <tbody>
+      {% for a in stats_articles %}
+        <tr>
+          <td>{{ a.nom_cable }}</td>
+          <td>{{ a.nb_notes }}</td>
+          <td>{{ a.note_moyenne if a.note_moyenne else '—' }}</td>
+          <td>{{ a.nb_commentaires }}</td>
+          <td><div style="background:#FFCE56;height:18px;width:{{ a.pct_nb_notes }}%;min-width:2px"></div></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

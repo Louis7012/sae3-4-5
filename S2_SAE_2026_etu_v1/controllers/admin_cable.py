@@ -1,124 +1,119 @@
 #! /usr/bin/python
 # -*- coding:utf-8 -*-
-import math
-import os.path
+import os
 from random import random
-
-from flask import Blueprint
-from flask import request, render_template, redirect, flash
-#from werkzeug.utils import secure_filename
-
+from flask import Blueprint, request, render_template, redirect, flash
 from connexion_db import get_db
 
-admin_cable = Blueprint('admin_cable', __name__,
-                          template_folder='templates')
+admin_cable = Blueprint('admin_cable', __name__, template_folder='templates')
 
 
 @admin_cable.route('/admin/cable/show')
 def show_cable():
     mycursor = get_db().cursor()
-    sql = "SELECT id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable;"
-    mycursor.execute(sql)
+
+    # Sélection de tous les câbles avec nb déclinaisons et stock minimum
+    mycursor.execute("""
+        SELECT c.id_cable, c.nom_cable, c.couleur, c.prix_cable, c.blindage,
+               c.fournisseur, c.marque, c.photo, c.stock, c.type_prise_id,
+               COUNT(dc.id_declinaison_cable) AS nb_declinaisons,
+               MIN(dc.stock) AS min_stock
+        FROM cable c
+        LEFT JOIN declinaison_cable dc ON dc.cable_id = c.id_cable
+        GROUP BY c.id_cable
+        ORDER BY c.nom_cable
+    """)
     cables = mycursor.fetchall()
-    return render_template('admin/cable/show_cable.html', cable=cables)
+
+    # Ajouter le nombre de commentaires non lus pour chaque câble
+    for cable in cables:
+        mycursor.execute("""
+            SELECT COUNT(*) AS nb
+            FROM commentaire
+            WHERE cable_id = %s AND valider = 0 AND commentaire_parent_id IS NULL
+        """, cable['id_cable'])
+        row = mycursor.fetchone()
+        cable['nb_commentaires_nouveaux'] = row['nb']
+
+    return render_template('admin/cable/show_cable.html', cables=cables)
 
 
 @admin_cable.route('/admin/cable/add', methods=['GET'])
 def add_cable():
     mycursor = get_db().cursor()
-
-    return render_template('admin/cable/add_cable.html'
-                           #,types_article=type_article,
-                           #,couleurs=colors
-                           #,tailles=tailles
-                            )
+    mycursor.execute("SELECT * FROM type_prise")
+    types_prise = mycursor.fetchall()
+    mycursor.execute("SELECT * FROM longueur")
+    longueurs = mycursor.fetchall()
+    return render_template('admin/cable/add_cable.html', types_prise=types_prise, longueurs=longueurs)
 
 
 @admin_cable.route('/admin/cable/add', methods=['POST'])
 def valid_add_cable():
     mycursor = get_db().cursor()
-
     nom = request.form.get('nom', '')
     type_prise_id = request.form.get('type_prise_id', '')
+    longueur_id = request.form.get('longueur_id', '')
     prix = request.form.get('prix', '')
-    description = request.form.get('description', '')
+    blindage = request.form.get('blindage', '')
+    fournisseur = request.form.get('fournisseur', '')
+    marque = request.form.get('marque', '')
+    stock = request.form.get('stock', 0)
     image = request.files.get('image', '')
-
-    if image:
-        filename = 'img_upload'+ str(int(2147483647 * random())) + '.png'
+    filename = None
+    if image and image.filename:
+        filename = 'img_upload' + str(int(2147483647 * random())) + '.png'
         image.save(os.path.join('static/images/', filename))
-    else:
-        print("erreur")
-        filename=None
-
-    sql = '''  requête admin_cable_2 '''
-
-    tuple_add = (nom, filename, prix, type_prise_id, description)
-    print(tuple_add)
-    mycursor.execute(sql, tuple_add)
+    sql = """INSERT INTO cable(nom_cable, couleur, prix_cable, blindage, fournisseur, marque,
+             photo, stock, type_prise_id, longueur_id)
+             VALUES(%s, 'Noir', %s, %s, %s, %s, %s, %s, %s, %s)"""
+    mycursor.execute(sql, (nom, prix, blindage, fournisseur, marque, filename, stock, type_prise_id, longueur_id))
     get_db().commit()
-
-    print(u'cable ajouté , nom: ', nom, ' - type_prise:', type_prise_id, ' - prix:', prix,
-          ' - description:', description, ' - image:', image)
-    message = u'cable ajouté , nom:' + nom + '- type_prise :' + type_prise_id + ' - prix:' + prix + ' - description:' + description + ' - image:' + str(
-        image)
-    flash(message, 'alert-success')
+    flash('Câble ajouté', 'alert-success')
     return redirect('/admin/cable/show')
 
 
 @admin_cable.route('/admin/cable/delete', methods=['GET'])
 def delete_cable():
-    id_cable=request.args.get('id_cable')
+    id_cable = request.args.get('id_cable')
     mycursor = get_db().cursor()
-    sql = ''' requête admin_cable_3 '''
-    mycursor.execute(sql, id_cable)
-    nb_declinaison = mycursor.fetchone()
-    if nb_declinaison['nb_declinaison'] > 0:
-        message= u'il y a des declinaisons dans ce cable : vous ne pouvez pas le supprimer'
-        flash(message, 'alert-warning')
+    mycursor.execute("SELECT COUNT(*) AS nb FROM declinaison_cable WHERE cable_id = %s", id_cable)
+    nb = mycursor.fetchone()['nb']
+    if nb > 0:
+        flash("Ce câble a des déclinaisons : supprimez-les d'abord.", 'alert-warning')
     else:
-        sql = ''' requête admin_cable_4 '''
-        mycursor.execute(sql, id_cable)
+        mycursor.execute("SELECT photo FROM cable WHERE id_cable = %s", id_cable)
         cable = mycursor.fetchone()
-        print(cable)
-        image = cable['image']
-
-        sql = ''' requête admin_cable_5  '''
-        mycursor.execute(sql, id_cable)
+        photo = cable['photo'] if cable else None
+        mycursor.execute("DELETE FROM cable WHERE id_cable = %s", id_cable)
         get_db().commit()
-        if image != None:
-            os.remove('static/images/' + image)
-
-        print("un cable supprimé, id :", id_cable)
-        message = u'un cable supprimé, id : ' + id_cable
-        flash(message, 'alert-success')
-
+        if photo and os.path.exists('static/images/' + photo):
+            os.remove('static/images/' + photo)
+        flash('Câble supprimé', 'alert-success')
     return redirect('/admin/cable/show')
 
 
 @admin_cable.route('/admin/cable/edit', methods=['GET'])
 def edit_cable():
-    id_cable=request.args.get('id_cable')
+    id_cable = request.args.get('id_cable')
     mycursor = get_db().cursor()
-    sql =  "SELECT id_cable, nom_cable, couleur, prix_cable, blindage, fournisseur, marque, photo, stock, type_prise_id, longueur_id FROM cable WHERE id_cable = %s;"
-    mycursor.execute(sql, id_cable)
+    mycursor.execute("SELECT * FROM cable WHERE id_cable = %s", id_cable)
     cable = mycursor.fetchone()
-    print(cable)
-    sql = "SELECT * FROM type_prise;"
-    mycursor.execute(sql)
+    mycursor.execute("SELECT * FROM type_prise")
     types_prise = mycursor.fetchall()
-
-    # sql = '''
-    # requête admin_cable_6
-    # '''
-    # mycursor.execute(sql, id_cable)
-    # declinaisons_cable = mycursor.fetchall()
-
-    return render_template('admin/cable/edit_cable.html'
-                           ,cable=cable
-                           ,types_prise=types_prise
-                         #  ,declinaisons_cable=declinaisons_cable
-                           )
+    mycursor.execute("SELECT * FROM longueur")
+    longueurs = mycursor.fetchall()
+    mycursor.execute("""
+        SELECT dc.*, l.nom_longueur, c.nom_couleur, c.code_hex
+        FROM declinaison_cable dc
+        JOIN longueur l ON dc.longueur_id = l.id_longueur
+        JOIN couleur c ON dc.couleur_id = c.id_couleur
+        WHERE dc.cable_id = %s
+    """, id_cable)
+    declinaisons_cable = mycursor.fetchall()
+    return render_template('admin/cable/edit_cable.html',
+                           cable=cable, types_prise=types_prise,
+                           longueurs=longueurs, declinaisons_cable=declinaisons_cable)
 
 
 @admin_cable.route('/admin/cable/edit', methods=['POST'])
@@ -126,56 +121,24 @@ def valid_edit_cable():
     mycursor = get_db().cursor()
     nom = request.form.get('nom')
     id_cable = request.form.get('id_cable')
-    image = request.files.get('image', '')
     type_prise_id = request.form.get('type_prise_id', '')
     prix = request.form.get('prix', '')
-    marque = request.form.get('marque')
-    stock = request.form.get('stock')
-    sql = "SELECT photo FROM cable WHERE id_cable=%s;"
-    mycursor.execute(sql, id_cable)
-    image_nom = mycursor.fetchone()
-    image_nom = image_nom['image']
-    if image:
-        if image_nom != "" and image_nom is not None and os.path.exists(
-                os.path.join(os.getcwd() + "/static/images/", image_nom)):
-            os.remove(os.path.join(os.getcwd() + "/static/images/", image_nom))
-        # filename = secure_filename(image.filename)
-        if image:
-            filename = 'img_upload_' + str(int(2147483647 * random())) + '.png'
-            image.save(os.path.join('static/images/', filename))
-            image_nom = filename
-
-    sql = "UPDATE cable SET nom_cable=%s, prix_cable=%s, photo=%s, type_prise_id=%s, marque=%s, stock=%s WHERE id_cable = %s;"
-    mycursor.execute(sql, (nom, prix, image_nom, type_prise_id, marque, stock, id_cable))
-
+    marque = request.form.get('marque', '')
+    stock = request.form.get('stock', 0)
+    image = request.files.get('image', '')
+    mycursor.execute("SELECT photo FROM cable WHERE id_cable = %s", id_cable)
+    row = mycursor.fetchone()
+    image_nom = row['photo'] if row else None
+    if image and image.filename:
+        if image_nom and os.path.exists('static/images/' + image_nom):
+            os.remove('static/images/' + image_nom)
+        filename = 'img_upload_' + str(int(2147483647 * random())) + '.png'
+        image.save(os.path.join('static/images/', filename))
+        image_nom = filename
+    mycursor.execute("""
+        UPDATE cable SET nom_cable=%s, prix_cable=%s, photo=%s,
+        type_prise_id=%s, marque=%s, stock=%s WHERE id_cable=%s
+    """, (nom, prix, image_nom, type_prise_id, marque, stock, id_cable))
     get_db().commit()
-    if image_nom is None:
-        image_nom = ''
-    message = u'cable modifié , nom:' + nom + '- type_prise :' + type_prise_id + ' - prix:' + prix  + ' - image:' + image_nom + ' - description: ' + description
-    flash(message, 'alert-success')
+    flash('Câble modifié', 'alert-success')
     return redirect('/admin/cable/show')
-
-
-
-
-
-
-
-@admin_cable.route('/admin/cable/avis/<int:id>', methods=['GET'])
-def admin_avis(id):
-    mycursor = get_db().cursor()
-    cable=[]
-    commentaires = {}
-    return render_template('admin/cable/show_avis.html'
-                           , cable=cable
-                           , commentaires=commentaires
-                           )
-
-
-@admin_cable.route('/admin/comment/delete', methods=['POST'])
-def admin_avis_delete():
-    mycursor = get_db().cursor()
-    cable_id = request.form.get('id_cable', None)
-    userId = request.form.get('idUser', None)
-
-    return admin_avis(cable_id)
