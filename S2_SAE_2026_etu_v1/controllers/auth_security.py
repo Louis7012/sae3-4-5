@@ -20,7 +20,6 @@ def auth_login_post():
     mycursor = get_db().cursor()
     login = request.form.get('login')
     password = request.form.get('password')
-    tuple_select = (login)
     sql = " SELECT login, role, id_utilisateur, password FROM utilisateur WHERE login = %s; "
     retour = mycursor.execute(sql, (login))
     user = mycursor.fetchone()
